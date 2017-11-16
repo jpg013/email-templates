@@ -8,10 +8,10 @@ const mediator                  = new EventEmitter()
 const winston                   = require('winston')
 const fs                        = require('fs')
 const sgMail                    = require('@sendgrid/mail')
-const phantom                   = require('phantom')
 const templates                 = require('./templates')
 const services                  = require('./services')
 const repository                = require('./repository')
+const workers                   = require('./workers')
 
 /*
 sgMail.setApiKey(process.env.SENDGRID_API_KEY)
@@ -44,6 +44,9 @@ process.on('uncaughtRejection', (err, promise) => {
 
 async function onDIReady(container) {
   try {
+    container.workers = await workers.connect(container)
+    winston.log('info', 'Connected to workers')
+
     container.repository = await repository.connect(container)
     winston.log('info', 'Connected to repository')
 

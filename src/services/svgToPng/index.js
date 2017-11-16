@@ -30,14 +30,8 @@ async function connect(container) {
   const { workers } = container
 
   async function instantiatePageAndRenderToDestination(sourceFile, destFile, opts) {
-
-
     const instance = await phantom.create()
-    console.log('instance created making page')
     const page = await instance.createPage()
-    console.log('page created')
-
-
     const viewportSize = {
       width: opts.width || 100,
       height: opts.height || 100
@@ -57,13 +51,13 @@ async function connect(container) {
 
     await writeSvgtoTmpFile(svgMarkup, sourceFile)
 
-    console.log('calling instantiate')
     await instantiatePageAndRenderToDestination(sourceFile, destFile, opts)
-    console.log('instantiate called')
 
     const base64EncodedString = await base64_encode(await readFileAsync(destFile))
 
-    workers.scheduleFileCleanupJob(tmpFileDirPath, sourceFile)
+    workers.scheduleDirCleanupJob(tmpFileDirPath, 10)
+
+    return base64EncodedString
   }
 
   return {

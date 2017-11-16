@@ -31,12 +31,20 @@ async function connect(container) {
 
     const base_64_str = await svgToPngBase64Encoded(template.markup, template.opts)
 
+    // Update Cache - fire and forget
+    repository.set(template.name, base_64_str)
+
     const args = Object.assign({}, { height: 100, width: 100}, {
       base_64_str,
       ...template.opts
     })
 
-    return ejs.render(templates.embeddedImage.markup, args)
+    const renderedTemplate = ejs.render(templates.embeddedImage.markup, args)
+
+    // Update Cache - fire and forget
+    repository.set(template.name, renderedTemplate)
+
+    return renderedTemplate
   }
 
   async function renderTemplateTree(template) {
