@@ -1,0 +1,16 @@
+version: '3.2'
+
+services:
+  email-templates:
+    build: ./
+    container_name: "email-templates"
+    volumes:
+      - "./:/home/app/email-templates"
+      - "/home/app/email-templates/node_modules"
+    ports:
+      - "3000:3000"
+    environment:
+      - CONTAINER_PORT=3000
+      - CONTAINER_NAME=email-templates
+      - SENDGRID_API_KEY=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
+      - REDIS_CONNECTION=redis://docker.for.mac.localhost:6379
