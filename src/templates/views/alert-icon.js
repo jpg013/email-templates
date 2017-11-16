@@ -11,5 +11,9 @@ module.exports = {
   name: 'alertIcon',
   markup,
   isSvg: true,
-  children: []
+  children: [],
+  opts: {
+    height: 18,
+    width: 18
+  }
 }

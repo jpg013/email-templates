@@ -29,5 +29,9 @@ module.exports = {
   name: 'dunamiLogo',
   markup,
   isSvg: true,
-  children: []
+  children: [],
+  opts: {
+    height: 200,
+    width: 241
+  }
 }

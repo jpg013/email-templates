@@ -5,8 +5,6 @@ const path                = require('path')
 const readDirAsync   = promisify(fs.readdir)
 
 const walkTemplateTree = (template, map) => {
-  console.log(template)
-
   if (!template) {
     throw new Error('missing template')
   }
@@ -28,7 +26,7 @@ async function connect() {
       acc[cur.name] = cur
       return acc
     }, {})
-    
+
   Object.keys(templates).forEach(cur => {
     walkTemplateTree(templates[cur], templates)
   })

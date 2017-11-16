@@ -1,5 +1,5 @@
 const markup = `<div style="height: 60px; background: #EAEAEB; display: flex; align-items: center; padding: 0 20px">
-  <div>
+  <div style="position: relative; left: -25px; top: -20px">
     <%- children[0] %>
   </div>
 
