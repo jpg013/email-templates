@@ -8,9 +8,10 @@ const markup = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0
 </svg>`
 
 module.exports = {
-  name: 'alertIcon',
+  name: 'alertIconSvg',
   markup,
-  isSvg: true,
+  type: 'svg',
+  cacheKey: 'alert_icon_svg',
   children: [],
   opts: {
     height: 18,

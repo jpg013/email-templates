@@ -1,8 +1,8 @@
-const scheduleDirCleanupJob = require('./scheduleDirCleanupJob')
+const cleanupTmpFileJob = require('./cleanupTmpFileJob')
 
 async function connect(container) {
   return {
-    scheduleDirCleanupJob: await scheduleDirCleanupJob.connect()
+    cleanupTmpFileJob: await cleanupTmpFileJob.connect()
   }
 }
 

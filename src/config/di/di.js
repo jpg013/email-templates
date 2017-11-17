@@ -1,4 +1,10 @@
-function initDI ({serverSettings, cacheSettings, cache}, mediator) {
+function initDI ({
+  serverSettings,
+  pathSettings,
+  cacheSettings,
+  cache,
+  cdn,
+  cdnSettings}, mediator) {
 
   mediator.once('init', () => {
     mediator.on('cache.ready', cache => {
@@ -6,7 +12,9 @@ function initDI ({serverSettings, cacheSettings, cache}, mediator) {
       const container = Object.create({})
 
       container.serverSettings = Object.assign({}, serverSettings)
+      container.pathSettings = Object.assign({}, pathSettings)
       container.cache = cache
+      container.cdn = cdn.connect(cdnSettings)
 
       mediator.emit('di.ready', container)
     })

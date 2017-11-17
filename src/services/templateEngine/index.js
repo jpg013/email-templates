@@ -3,68 +3,89 @@ const ejs = require('ejs')
 const volumeChangeTemplateDefinition = ['volumeChangeHeader']
 
 async function connect(container) {
-  const { templates, repository } = container
+  const { templates, repositories } = container
 
   if (!templates) {
     throw new Error('missing required views dependency')
   }
 
-  if (!repository) {
-    throw new Error('missing required repository dependency')
+  if (!repositories) {
+    throw new Error('missing required repositories dependency')
   }
 
-  async function renderTemplateMarkup(template) {
-    const children = await Promise.all(template.children.map(renderTemplateTree))
-    const args = Object.assign({}, { children })
+  const { cacheRepository, cdnRepository } = repositories
 
-    return ejs.render(template.markup, args)
+  if (!cacheRepository) {
+    throw new Error('missing required cache repository')
   }
 
-  async function renderSvg(template) {
-    const cacheResult = await repository.get(template.name)
+  if (!cdnRepository) {
+    throw new Error('missing required cdn repository')
+  }
+
+  async function renderSvgTemplateFile(templateFileObj) {
+    const cacheResult = templateFileObj.cacheKey ?
+      await cacheRepository.get(templateFileObj.cacheKey) :
+      undefined
 
     if (cacheResult) {
       return cacheResult
     }
 
-    const { svgToPngBase64Encoded } = container.services.svgToPng
+    const { saveAsPng } = container.services.svgToPng
+    const { name, markup, opts } = templateFileObj
+    const pngFile = await saveAsPng(name, markup, opts)
 
-    const base_64_str = await svgToPngBase64Encoded(template.markup, template.opts)
+    // Upload the file to the CDN
+    const secureUrl = await cdnRepository.upload(pngFile)
 
-    // Update Cache - fire and forget
-    repository.set(template.name, base_64_str)
+    if (templateFileObj.cacheKey) {
+      cacheRepository.set(templateFileObj.cacheKey, secureUrl)
+    }
 
-    const args = Object.assign({}, { height: 100, width: 100}, {
-      base_64_str,
-      ...template.opts
-    })
+    return secureUrl
 
-    const renderedTemplate = ejs.render(templates.embeddedImage.markup, args)
-
-    // Update Cache - fire and forget
-    repository.set(template.name, renderedTemplate)
-
-    return renderedTemplate
+    //return {
+      //filename: 'dunamiLogo.png',
+      //type: 'image/png',
+      //content_id: 'dunami-logo',
+      //content: ''
+    //}
   }
 
-  async function renderTemplateTree(template) {
-    if (!template.isSvg) {
-      return await renderTemplateMarkup(template)
-    } else {
-      return await renderSvg(template)
+  async function renderTemplateFile(name) {
+    const templateFileObj = templates[name]
+
+    if (!templateFileObj) {
+      return
+    }
+
+    switch(templateFileObj.type) {
+      case 'svg':
+        return await renderSvgTemplateFile(templateFileObj)
+      default:
+        return
     }
   }
 
-  async function renderVolumeChangeTemplate() {
-    const templateChilden = [
-      templates.volumeChangeHeader
-    ]
+  async function renderVolumeChangeTemplate(opts={}) {
+    const templateName = 'volumeChange'
+    const templateObj = templates[templateName]
 
-    const base = Object.assign({}, templates.base, {
-      children: templateChilden
-    })
+    if (!templateObj) {
+      throw new Error('missing required volume change template')
+    }
 
-    return await renderTemplateTree(base)
+    const files = templateObj.files ?
+      await Promise.all(templateObj.files.map(renderTemplateFile)) :
+      []
+
+    const baseArgs = Object.assign({}, opts, { files })
+
+    return {
+      html: ejs.render(templateObj.markup, baseArgs),
+      files,
+    }
   }
 
   return {

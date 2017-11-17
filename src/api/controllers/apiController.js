@@ -1,5 +1,7 @@
 const express    = require('express')
 const httpStatus = require('http-status-codes')
+//const sgMail     = require('@sendgrid/mail')
+const dial       = require('../../libs/dial')
 
 const APIController = container => {
   const { services } = container
@@ -40,14 +42,49 @@ const APIController = container => {
     }
   }
 
+  function sendEmailTemplate({html, attachments}) {
+    const body = {
+      'personalizations': [
+        {
+          to: [{email: 'justin.graber@dunami.com'}],
+          subject: 'Hello, World!'
+        }
+      ],
+      from: {
+        email: 'dev@innosolpro.com'
+      },
+      content: [
+        {
+          type: 'text/html',
+          value: html
+        }
+      ],
+      // attachments
+    }
+
+    const headers = {
+      Authorization: `Bearer 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`
+    }
+
+    const opts = {
+      headers,
+      json: body
+    }
+
+    dial('https://api.sendgrid.com/v3/mail/send', 'post', opts)
+  }
+
   // ======================================================
   // Controller Methods
   // ======================================================
   async function postVolumeChangeTemplate(req, res, next) {
     try {
-      req.results = await templateEngine.renderVolumeChangeTemplate()
+      const results = await templateEngine.renderVolumeChangeTemplate()
+      req.results = results.html
+
+      // This is complete test code, remove once finished
+      sendEmailTemplate(results)
     } catch(e) {
-      console.log(e)
       req.error = e
     } finally {
       next()

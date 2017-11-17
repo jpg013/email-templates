@@ -26,10 +26,10 @@ const markup = `<svg version="1.1" style="width: 140px; margin-top: 25px" xmlns=
 </svg>`
 
 module.exports = {
-  name: 'dunamiLogo',
+  name: 'dunamiLogoSvg',
+  cacheKey: 'dunami_logo_svg',
   markup,
-  isSvg: true,
-  children: [],
+  type: 'svg',
   opts: {
     height: 200,
     width: 241
