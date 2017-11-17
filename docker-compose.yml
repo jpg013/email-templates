@@ -12,5 +12,5 @@ services:
     environment:
       - CONTAINER_PORT=3000
       - CONTAINER_NAME=email-templates
-      - SENDGRID_API_KEY=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
+      - SENDGRID_API_KEY='enter-key-here'
       - REDIS_CONNECTION=redis://docker.for.mac.localhost:6379
