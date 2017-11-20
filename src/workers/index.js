@@ -1,8 +1,8 @@
-const cleanupTmpFileJob = require('./cleanupTmpFileJob')
+const startCleanupTmpFilesJob = require('./startCleanupTmpFilesJob')
 
 async function connect(container) {
   return {
-    cleanupTmpFileJob: await cleanupTmpFileJob.connect()
+    startCleanupTmpFilesJob: await startCleanupTmpFilesJob.connect(container)
   }
 }
 

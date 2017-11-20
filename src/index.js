@@ -40,6 +40,9 @@ async function onDIReady(container) {
 
     winston.log('info', `Server started succesfully, running on port: ${container.serverSettings.port}.`)
 
+    // Start tmp file cleanup job
+    container.workers.startCleanupTmpFilesJob()
+
     app.on('close', () => winston.log('info', 'closing app'))
   } catch(e) {
     winston.log('error', e)

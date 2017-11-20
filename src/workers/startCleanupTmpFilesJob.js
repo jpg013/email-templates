@@ -7,8 +7,7 @@ const readDirAsync   = promisify(fs.readdir)
 const unlinkAsync = promisify(fs.unlink)
 const statAsync = promisify(fs.stat)
 
-
-function logJob(err, {dirPath}) {
+function logJob(err, dirPath) {
   if (err) {
     winston.log('info', `Cleanup directory ${dirPath} job completed with error, `, err);
   } else {
@@ -16,9 +15,9 @@ function logJob(err, {dirPath}) {
   }
 }
 
-async function cleanupDir(cb, {dirPath, msOffset}) {
+async function cleanupDir(cb, dirPath) {
   const now = new Date()
-  const deletionTime = now.setMilliseconds(now.getMilliseconds() - 9) // Don't delete files created within last 9 seconds
+  const deletionTime = now.setMilliseconds(now.getMilliseconds() - 30000) // Don't delete files created within last 30 seconds
   const files = await readDirAsync(dirPath)
 
   const fileStats = await Promise.all(files.map(async cur => {
@@ -36,20 +35,19 @@ async function cleanupDir(cb, {dirPath, msOffset}) {
 }
 
 async function connect(container) {
-  return (dirPath, delay=10) => {
-    const startTime = new Date();
-    startTime.setSeconds(startTime.getSeconds() + delay);
+  const { pathSettings } = container
 
-    const bindArgs = { dirPath }
+  if (!pathSettings) {
+    throw new Error('missing required dependency')
+  }
+
+  return () => {
+    const dirpath = pathSettings.tmpFileDir
 
     return new CronJob(
-      startTime,
-      cb => {
-        cleanupDir(cb, bindArgs)
-          .then(cb)
-          .catch(cb)
-      },
-      err => logJob(err, bindArgs),
+      '0 */1 * * * *', // Every 1 minute
+      cb => cleanupDir(cb, dirpath).then(cb).catch(cb),
+      err => logJob(err, dirpath),
       true,
       'America/Los_Angeles'
     )

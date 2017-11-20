@@ -1,12 +1,12 @@
 const markup = `
 <div style="overflow: hidden; height: 60px; background: #EAEAEB; padding: 0 20px; display: flex; align-items: center; justify-content: center;">
-  <div style="position: relative; left: -25px; top: -20px">
-    <img  src="<%- svgs[0].srcUrl %>" />
+  <div style="position: relative; left: -25px; top: 25px">
+    <img style="height: 200px; width: 241px" src="<%- svgs[0].srcUrl %>" />
   </div>
 
   <div style="display: flex; align-items: center; justify-content: center; margin-left: auto; line-height: 60px; color: #F5A623; font-size: 16px; padding-left: 10px; font-family: Arial; letter-spacing: .7px">
     <div style="padding-right: 10px; position: relative; top: -1px;">
-      <img  src="<%- svgs[0].srcUrl %>" />
+      <img style="height: 18px; width: 18px" src="<%- svgs[1].srcUrl %>" />
     </div>
     <span>
       Sentiment Alert
@@ -28,27 +28,17 @@ const markup = `
   </div>
 </div>
 
-<div style="background: #FFFFFF; padding: 10px 0">
-  <div style="font-weight: bold; padding-left: 20px; height: 30px; line-height: 30px; font-family: Arial; letter-spacing: .7px; font-size: 20px; color: #59595a">
-    Volume Changes
-  </div>
-</div>
+<div style="padding:0; width: 100%; display: flex; border-bottom: 1px solid #C0C0C0">
+  <div style="width:50%; height: 300px; display; flex; align-items: center; justify-content: center">
 
-<div style="padding:0">
-  <table style="border: 1px solid #C0C0C0; width: 100%">
-    <tr style="height: 90px; width: 100%;">
-      <td style="border-right: 1px solid #C0C0C0; width: 50%">
-        Volume Increase
-        <img  src="<%- svgs[0].srcUrl %>" />
-      </td>
-      <td style="width: 50%">Mentions</td>
-    </tr>
-  </table>
+  </div>
+
+  <div style="width: 1px; height: 300px; background: #C0C0C0"></div>
 </div>
 `
 
 module.exports = {
   id: 'volume_change',
   markup,
-  svgs: ['alert_warning_icon']
+  svgs: ['dunami_logo_icon', 'alert_warning_icon']
 }
