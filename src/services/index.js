@@ -1,4 +1,4 @@
-const svgToPng     = require('./svgToPng')
+const svgToPng       = require('./svgToPng')
 const templateEngine = require('./templateEngine')
 
 async function connect(container) {

@@ -2,11 +2,13 @@ const {
   serverSettings,
   cacheSettings,
   pathSettings,
-  cdnSettings
-}                 = require('./config')
-const di          = require('./di')
-const cache       = require('./cache')
-const cdn         = require('./cdn')
+  cdnSettings,
+  fileConverterSettings
+}                   = require('./config')
+const di            = require('./di')
+const cache         = require('./cache')
+const cdn           = require('./cdn')
+const fileConverter = require('./fileConverter')
 
 const bindArgs = {
   serverSettings,
@@ -14,7 +16,9 @@ const bindArgs = {
   pathSettings,
   cache,
   cdnSettings,
-  cdn
+  cdn,
+  fileConverterSettings,
+  fileConverter
 }
 
 const init = di.initDI.bind(null, bindArgs)

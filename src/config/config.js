@@ -10,7 +10,8 @@ const cacheSettings = {
 }
 
 const pathSettings = {
-  tmpFileDir: path.resolve(appDir, 'tmp_files')
+  tmpFileDir: path.resolve(appDir, 'tmp_files'),
+  tplStaticDir: path.resolve(appDir, 'templates', 'static')
 }
 
 const cdnSettings = {
@@ -19,4 +20,14 @@ const cdnSettings = {
   api_secret: 'vB0fNehUCPZNKgeNVcQO4xQygl0'
 }
 
-module.exports = Object.assign({}, { serverSettings, cacheSettings, pathSettings, cdnSettings })
+const fileConverterSettings = {
+  api_key: 'ilKNOzJz2nABUbch3MYYE0JKZVCR-_id-2rpSrXWHac3wNcV2crq1gf-pRYpdrd2iVob15rFTGtJkSpUIdW_ug'
+}
+
+module.exports = Object.assign({}, {
+  serverSettings,
+  cacheSettings,
+  pathSettings,
+  cdnSettings,
+  fileConverterSettings
+})

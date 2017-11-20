@@ -2,7 +2,6 @@ const phantom       = require('phantom')
 const path          = require('path')
 const fs            = require('fs')
 const { promisify } = require('util')
-const uuidv4        = require('uuid/v4');
 
 const readFileAsync   = promisify(fs.readFile)
 const unlinkFileAsync = promisify(fs.unlink)
@@ -20,20 +19,26 @@ const writeToFile = (string, filePath) => {
   });
 }
 
-async function encode_file_base64(file) {
+async function encodeFileBase64(file) {
   const bitmap = await readFileAsync(file)
 
   return new Buffer(bitmap).toString('base64')
 }
 
 async function connect(container) {
-  const { workers, pathSettings } = container
+  const { workers, pathSettings, repositories } = container
 
-  if (!workers || !pathSettings) {
+  if (!workers || !pathSettings || !repositories) {
     throw new Error('missing required dependencies')
   }
 
-  const makeFilePath = fileName => path.resolve(pathSettings.tmpFileDir, fileName)
+  const { fileConverterRepository } = repositories
+
+  if (!fileConverterRepository) {
+    throw new Error('missing required file converter dependency')
+  }
+
+  const makeTmpFilePath = fileName => path.resolve(pathSettings.tmpFileDir, fileName)
 
   async function renderFile(sourceFile, destFile, opts) {
     const instance = await phantom.create()
@@ -58,8 +63,8 @@ async function connect(container) {
     const timestamp = new Date().getTime()
     const pngFileName = `${fileName}_${timestamp}.png`
     const svgFileName = `${fileName}_${timestamp}.html`
-    const svgFilePath = makeFilePath(svgFileName)
-    const pngFilePath = makeFilePath(pngFileName)
+    const svgFilePath = makeTmpFilePath(svgFileName)
+    const pngFilePath = makeTmpFilePath(pngFileName)
 
     await writeToFile(svgMarkup, svgFilePath)
     await renderFile(svgFilePath, pngFilePath, opts)
@@ -67,27 +72,34 @@ async function connect(container) {
     return pngFilePath
   }
 
-  async function svgToPngBase64Encoded(svgMarkup, opts={}) {
+  async function convert(file, opts={}) {
     const timestamp = new Date().getTime()
+    const pngFileName = makeTmpFilePath(`${file}_${timestamp}.png`)
+    const svgFileName = (`${file}.svg`)
 
-    //const uuid = uuidv4() // 'df7cca36-3d7a-40f4-8f06-ae03cc22f045'
-    const sourceFile = makeTmpSvgFilePath(uuid)
-    const destFile = makeTmpPngFilePath(uuid)
+    try {
+      const process = await fileConverterRepository.startProcess(
+        await fileConverterRepository.createProcess(),
+        svgFileName,
+        pathSettings.tplStaticDir,
+        opts
+      )
 
-    await writeSvgtoTmpFile(svgMarkup, sourceFile)
+      await fileConverterRepository.downloadFile(process, pngFileName)
+    } catch(e) {
+      console.log(e)
+    }
 
-    // await instantiatePageAndRenderToDestination(sourceFile, destFile, opts)
+    const base64Str = await encodeFileBase64(pngFileName)
 
-    const base64EncodedString = await base64_encode(await readFileAsync(destFile))
-
-    workers.scheduleDirCleanupJob(tmpFileDirPath, 10)
-
-    return base64EncodedString
+    return {
+      file: pngFileName,
+      base64Str
+    }
   }
 
   return {
-    saveAsPng,
-    encode_file_base64
+    convert
   }
 }
 

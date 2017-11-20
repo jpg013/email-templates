@@ -1,7 +1,3 @@
-// cloudinary.uploader.upload("my_picture.jpg", function(result) {
-  // console.log(result)
-// });
-
 async function connect(container) {
   const { cdn } = container
 
@@ -11,7 +7,7 @@ async function connect(container) {
 
   function upload(file) {
     return new Promise(resolve => {
-      cdn.uploader.upload(file, function({secure_url}) {
+      cdn.uploader.upload(file, ({secure_url}) => {
         resolve(secure_url)
       });
     })

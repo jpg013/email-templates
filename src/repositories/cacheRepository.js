@@ -6,14 +6,14 @@ async function connect(container) {
   }
 
   function set(key, val) {
-    const result = cache.set(key, val)
+    const result = cache.set(key, JSON.stringify(val))
 
     return result
   }
 
   function get(key) {
     return new Promise((resolve, reject) => {
-      cache.get(key, (err, val) => err ? reject(err) : resolve(val))
+      cache.get(key, (err, val) => err ? reject(err) : resolve(JSON.parse(val)))
     })
   }
 

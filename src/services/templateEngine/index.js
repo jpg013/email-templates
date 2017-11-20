@@ -88,8 +88,29 @@ async function connect(container) {
     }
   }
 
+  function compileVolumeChangeTemplate() {
+    const tpl = templates.volume_change
+
+    if (!tpl) {
+      throw new Error('missing required template')
+    }
+
+    // Compile the tpl
+    return {
+      compiledTpl: ejs.compile(tpl.markup, {}),
+      svgs: tpl.svgs
+    }
+  }
+
+  function renderTemplate(compiledTpl, args) {
+    console.log(args)
+    return compiledTpl(args)
+  }
+
   return {
-    renderVolumeChangeTemplate
+    renderVolumeChangeTemplate,
+    renderTemplate,
+    compileVolumeChangeTemplate
   }
 }
 

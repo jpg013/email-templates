@@ -1,16 +1,18 @@
 const express    = require('express')
 const httpStatus = require('http-status-codes')
-//const sgMail     = require('@sendgrid/mail')
+const moment     = require('moment')
 const dial       = require('../../libs/dial')
+const path       = require('path')
 
 const APIController = container => {
-  const { services } = container
+  const { services, repositories, pathSettings } = container
 
-  if (!services) {
-    throw new Error('missing required services dependency')
+  if (!services || !repositories) {
+    throw new Error('missing required dependencies')
   }
 
-  const { templateEngine } = services
+  const { templateEngine, svgToPng } = services
+  const { fileConverterRepository, cacheRepository, cdnRepository } = repositories
 
   const controller = express.Router()
 
@@ -71,7 +73,31 @@ const APIController = container => {
       json: body
     }
 
-    dial('https://api.sendgrid.com/v3/mail/send', 'post', opts)
+    //dial('https://api.sendgrid.com/v3/mail/send', 'post', opts)
+  }
+
+  async function makeSvgTplData(svgTpl) {
+    const cachedResult = svgTpl.cacheKey ?
+      await cacheRepository.get(svgTpl.cacheKey) :
+      undefined
+
+    if (cachedResult) {
+      return cachedResult
+    }
+
+    const conversion = await svgToPng.convert(svgTpl.id, svgTpl.opts)
+    const srcUrl = await cdnRepository.upload(conversion.file)
+
+    const svgData = {
+      srcUrl,
+      base64Str: conversion.base64Str
+    }
+
+    if (svgTpl.cacheKey) {
+      cacheRepository.set(svgTpl.cacheKey, svgData)
+    }
+
+    return svgData
   }
 
   // ======================================================
@@ -79,22 +105,39 @@ const APIController = container => {
   // ======================================================
   async function postVolumeChangeTemplate(req, res, next) {
     try {
-      const results = await templateEngine.renderVolumeChangeTemplate()
-      req.results = results.html
+      const { compiledTpl, svgs} = await templateEngine.compileVolumeChangeTemplate()
+
+      const renderArgs = {
+        ...req.body,
+        svgs: await Promise.all(svgs.map(makeSvgTplData))
+      }
+
+      req.results = templateEngine.renderTemplate(compiledTpl, renderArgs)
 
       // This is complete test code, remove once finished
-      sendEmailTemplate(results)
+      //sendEmailTemplate(results)
     } catch(e) {
+      console.log(e)
       req.error = e
     } finally {
       next()
     }
   }
 
+  function generateFakeRequestData(req, res, next) {
+    req.body = {
+      analysisName: 'kbhersh',
+      analysisLink: 'https://appdev.dunami.com/#/channel/1169/analysis/13504/posts',
+      folderName: 'KC Devs'
+    }
+
+    next()
+  }
+
   // ======================================================
   // Controller Routes
   // ======================================================
-  controller.get('/volume-change', postVolumeChangeTemplate, responseHandler)
+  controller.get('/volume-change', generateFakeRequestData, postVolumeChangeTemplate, responseHandler)
 
   return controller
 }
