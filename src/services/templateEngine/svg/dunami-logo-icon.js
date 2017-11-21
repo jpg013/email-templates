@@ -1,3 +1,4 @@
+const markup = `
 <svg version="1.1" style="width: 140px; margin-top: 25px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 792 612" style="enable-background:new 0 0 792 612;" x="0px" y="0px">
   <g>
     <path style="fill:#D13239 " d="M704.8,142.9l-68.8,42.4c-1,0.6-2,1.4-2.8,2.2l0,0l0,0c-1.8,2-2.9,4.6-2.9,7.5c0,6.2,5,11.3,11.3,11.3
@@ -24,3 +25,13 @@
     </g>
   </g>
 </svg>
+`
+
+module.exports = {
+  id: 'dunami_logo_icon',
+  cacheKey: 'dunami_logo_icon',
+  opts: {
+    height: 500,
+    width: 500
+  }
+}

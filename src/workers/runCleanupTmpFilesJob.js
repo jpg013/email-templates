@@ -34,7 +34,7 @@ async function cleanupDir(cb, dirPath) {
   await Promise.all(filesNeedDeleted.map(cur => unlinkAsync(`${dirPath}/${cur.fileName}`)))
 }
 
-async function connect(container) {
+function connect(container) {
   const { pathSettings } = container
 
   if (!pathSettings) {

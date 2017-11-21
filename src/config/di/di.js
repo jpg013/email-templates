@@ -6,7 +6,8 @@ function initDI ({
   cdn,
   cdnSettings,
   fileConverterSettings,
-  fileConverter
+  fileConverter,
+  file
 }, mediator) {
 
   mediator.once('init', () => {
@@ -20,6 +21,7 @@ function initDI ({
       container.cache = cache
       container.cdn = cdn.connect(cdnSettings)
       container.fileConverter = fileConverter.connect(fileConverterSettings)
+      container.file = Object.assign({}, file)
 
       mediator.emit('di.ready', container)
     })

@@ -10,8 +10,7 @@ const cacheSettings = {
 }
 
 const pathSettings = {
-  tmpFileDir: path.resolve(appDir, 'tmp_files'),
-  tplStaticDir: path.resolve(appDir, 'templates', 'static')
+  tmpFileDir: path.resolve(appDir, 'tmp_files')
 }
 
 const cdnSettings = {

@@ -7,7 +7,6 @@ const config                    = require('./config')
 const mediator                  = new EventEmitter()
 const winston                   = require('winston')
 const fs                        = require('fs')
-const templates                 = require('./templates')
 const services                  = require('./services')
 const repositories              = require('./repositories')
 const workers                   = require('./workers')
@@ -30,9 +29,6 @@ async function onDIReady(container) {
     container.repositories = await repositories.connect(container)
     winston.log('info', 'Connected to repositories')
 
-    container.templates = await templates.connect(container)
-    winston.log('info', 'Connected to views')
-
     container.services = await services.connect(container)
     winston.log('info', 'Connected to services')
 
@@ -41,7 +37,7 @@ async function onDIReady(container) {
     winston.log('info', `Server started succesfully, running on port: ${container.serverSettings.port}.`)
 
     // Start tmp file cleanup job
-    container.workers.startCleanupTmpFilesJob()
+    // container.workers.startCleanupTmpFilesJob()
 
     app.on('close', () => winston.log('info', 'closing app'))
   } catch(e) {

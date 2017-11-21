@@ -9,6 +9,7 @@ const di            = require('./di')
 const cache         = require('./cache')
 const cdn           = require('./cdn')
 const fileConverter = require('./fileConverter')
+const file          = require('../libs/file')
 
 const bindArgs = {
   serverSettings,
@@ -18,7 +19,8 @@ const bindArgs = {
   cdnSettings,
   cdn,
   fileConverterSettings,
-  fileConverter
+  fileConverter,
+  file
 }
 
 const init = di.initDI.bind(null, bindArgs)
