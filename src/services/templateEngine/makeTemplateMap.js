@@ -1,14 +1,24 @@
 const file = require('../../libs/file')
 const path = require('path')
 
-function mapTemplateViewSvgs(views, svgs) {
+function mapTemplateViewFiles(views, files) {
   return views.map(v => {
-    if (!v.svgs || !v.svgs.length) {
+    if (!v.files || !v.files.length) {
       return v
     }
 
+    const mappedFiles = v.files.map(cur => {
+      const file = files.find(f => f.id === cur.id)
+
+      if (!file) {
+        throw new Error('missing file')
+      }
+
+      return Object.assign({}, cur, file)
+    })
+
     return Object.assign({}, v, {
-      svgs: v.svgs.map(cur => svgs.find(s => s.id === cur))
+      files: mappedFiles
     })
   })
   .reduce((acc, cur) => {
@@ -17,10 +27,10 @@ function mapTemplateViewSvgs(views, svgs) {
   }, {})
 }
 
-async function loadTemplateSvgs() {
+async function loadTemplateFiles() {
   // Read in svgs
-  const svgs = await file.readDirAsync(path.resolve(__dirname, 'svg'))
-  return svgs.map(s => require(`./svg/${s}`))
+  const files = await file.readDirAsync(path.resolve(__dirname, 'files'))
+  return files.map(f => require(`./files/${f}`))
 }
 
 async function loadTemplateViews() {
@@ -31,7 +41,7 @@ async function loadTemplateViews() {
 
 module.exports = async () => {
   const templateViews = await loadTemplateViews()
-  const templateSvgs = await loadTemplateSvgs()
+  const templateFiles = await loadTemplateFiles()
 
-  return mapTemplateViewSvgs(templateViews, templateSvgs)
+  return mapTemplateViewFiles(templateViews, templateFiles)
 }

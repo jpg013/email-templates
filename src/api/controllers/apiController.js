@@ -11,8 +11,12 @@ const APIController = container => {
     throw new Error('missing required dependencies')
   }
 
-  const { templateEngine, svgToPng } = services
-  const { fileConverterRepository, cacheRepository, cdnRepository } = repositories
+  const { templateEngine, svg } = services
+  const { cacheRepository } = repositories
+
+  if (!templateEngine || !svg || !cacheRepository) {
+    throw new Error('missing required dependencies')
+  }
 
   const controller = express.Router()
 
@@ -76,46 +80,43 @@ const APIController = container => {
     //dial('https://api.sendgrid.com/v3/mail/send', 'post', opts)
   }
 
-  async function makeSvgTplData(svgTpl) {
-    const cachedResult = svgTpl.cacheKey ?
-      await cacheRepository.get(svgTpl.cacheKey) :
+  async function buildTemplateFile(tplFile) {
+    const cachedFile = tplFile.cacheKey ?
+      await cacheRepository.get(tplFile.cacheKey) :
       undefined
 
-    if (cachedResult) {
-      return cachedResult
+    if (cachedFile) {
+      return cachedFile
     }
 
-    const conversion = await svgToPng.convert(svgTpl.id, svgTpl.opts)
-    const srcUrl = await cdnRepository.upload(conversion.file)
+    const svgFile = await svg.writeFileToSvg(tplFile)
+    const pngFileData = await svg.convertSvgToPng(svgFile, tplFile.opts)
 
-    const svgData = {
-      srcUrl,
-      base64Str: conversion.base64Str
+    if (tplFile.cacheKey) {
+      cacheRepository.set(tplFile.cacheKey, pngFileData)
     }
 
-    if (svgTpl.cacheKey) {
-      cacheRepository.set(svgTpl.cacheKey, svgData)
-    }
-
-    return svgData
+    return pngFileData
   }
 
   // ======================================================
   // Controller Methods
   // ======================================================
   async function postVolumeChangeTemplate(req, res, next) {
+    const templateData = req.body
+
     try {
-      const { compiledTpl, svgs} = await templateEngine.compileVolumeChangeTemplate()
+      const { compiledTpl, files } = await templateEngine.compileVolumeChangeTemplate(templateData)
 
       const renderArgs = {
-        ...req.body,
-        svgs: await Promise.all(svgs.map(makeSvgTplData))
+        ...templateData,
+        files: await Promise.all(files.map(buildTemplateFile))
       }
 
       req.results = templateEngine.renderTemplate(compiledTpl, renderArgs)
 
       // This is complete test code, remove once finished
-      //sendEmailTemplate(results)
+      // sendEmailTemplate(results)
     } catch(e) {
       console.log(e)
       req.error = e
@@ -128,7 +129,21 @@ const APIController = container => {
     req.body = {
       analysisName: 'kbhersh',
       analysisLink: 'https://appdev.dunami.com/#/channel/1169/analysis/13504/posts',
-      folderName: 'KC Devs'
+      folderName: 'KC Devs',
+      sentiment: [
+        {
+          type: 'Negative',
+          percent: .20
+        },
+        {
+          type: 'Neutral',
+          percent: .30
+        },
+        {
+          type: 'Positive',
+          percent: .50
+        }
+      ]
     }
 
     next()

@@ -11,6 +11,7 @@ const markup = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0
 module.exports = {
   id: 'alert_warning_icon',
   cacheKey: 'alert_warning_icon',
+  type: 'static_svg',
   markup,
   opts: {
     height: 40,

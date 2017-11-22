@@ -1,12 +1,12 @@
 const markup = `
 <div style="overflow: hidden; height: 60px; background: #EAEAEB; padding: 0 20px; display: flex; align-items: center; justify-content: center;">
   <div style="position: relative; left: -25px; top: 25px">
-    <img style="height: 200px; width: 241px" src="<%- svgs[0].srcUrl %>" />
+    <image style="height: 200px; width: 241px" src="data:image/png;base64, <%- files[0].base64Str %>"></image>
   </div>
 
   <div style="display: flex; align-items: center; justify-content: center; margin-left: auto; line-height: 60px; color: #F5A623; font-size: 16px; padding-left: 10px; font-family: Arial; letter-spacing: .7px">
     <div style="padding-right: 10px; position: relative; top: -1px;">
-      <img style="height: 18px; width: 18px" src="<%- svgs[1].srcUrl %>" />
+      <image style="height: 18px; width: 18px" src="data:image/png;base64, <%- files[1].base64Str %>"></image>
     </div>
     <span>
       Sentiment Alert
@@ -29,8 +29,8 @@ const markup = `
 </div>
 
 <div style="padding:0; width: 100%; display: flex; border-bottom: 1px solid #C0C0C0">
-  <div style="width:50%; height: 300px; display; flex; align-items: center; justify-content: center">
-
+  <div style="width:50%; height: 300px; display: flex; align-items: center; justify-content: center">
+    <image height="350px" src="data:image/png;base64, <%- files[2].base64Str %>"></image>
   </div>
 
   <div style="width: 1px; height: 300px; background: #C0C0C0"></div>
@@ -40,5 +40,16 @@ const markup = `
 module.exports = {
   id: 'volume_change',
   markup,
-  svgs: ['dunami_logo_icon', 'alert_warning_icon']
+  files: [
+    {
+      id: 'dunami_logo_icon'
+    },
+    {
+      id: 'alert_warning_icon'
+    },
+    {
+      id: 'donut_chart',
+      dataProp: 'sentiment'
+    }
+  ]
 }

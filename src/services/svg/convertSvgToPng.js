@@ -1,26 +1,31 @@
 function convertSvgToPng(fileConverterRepository, encodeFileBase64, makeTmpFilePath) {
-  return async function convertSvgToPng(file, opts={}) {
+
+  return async (svgFile, opts={}) => {
     const timestamp = new Date().getTime()
-    const pngFileName = makeTmpFilePath(`${file}_${timestamp}.png`)
-    const svgFileName = (`${file}.svg`)
+    const pngFile = makeTmpFilePath(`svg_to_png_${timestamp}.png`)
+
+    let process
 
     try {
-      const process = await fileConverterRepository.startProcess(
+      process = await fileConverterRepository.startProcess(
         await fileConverterRepository.createProcess(),
-        svgFileName,
-        pathSettings.tplStaticDir,
+        svgFile,
         opts
       )
 
-      await fileConverterRepository.downloadFile(process, pngFileName)
+      await fileConverterRepository.downloadFile(process, pngFile)
     } catch(e) {
       console.log(e)
+    } finally {
+      if (process) {
+        process.delete()
+      }
     }
 
-    const base64Str = await encodeFileBase64(pngFileName)
+    const base64Str = await encodeFileBase64(pngFile)
 
     return {
-      file: pngFileName,
+      file: pngFile,
       base64Str
     }
   }

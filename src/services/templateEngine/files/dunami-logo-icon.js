@@ -30,6 +30,8 @@ const markup = `
 module.exports = {
   id: 'dunami_logo_icon',
   cacheKey: 'dunami_logo_icon',
+  type: 'static_svg',
+  markup,
   opts: {
     height: 500,
     width: 500

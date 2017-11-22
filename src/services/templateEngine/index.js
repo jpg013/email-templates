@@ -2,19 +2,29 @@ const ejs             = require('ejs')
 const makeTemplateMap = require("./makeTemplateMap")
 
 async function connect(container) {
-  const templateMap = makeTemplateMap()
+  const templateMap = await makeTemplateMap()
 
-  function compileVolumeChangeTemplate() {
+  function compileVolumeChangeTemplate(data) {
     const tpl = templateMap.volume_change
 
     if (!tpl) {
       throw new Error('missing required template')
     }
 
+    const files = tpl.files.map(cur => {
+      if (!cur.dataProp) {
+        return cur
+      }
+
+      return Object.assign({}, cur, {
+        data: data[cur.dataProp]
+      })
+    })
+
     // Compile the tpl
     return {
       compiledTpl: ejs.compile(tpl.markup, {}),
-      svgs: tpl.svgs
+      files
     }
   }
 

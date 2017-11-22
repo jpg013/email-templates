@@ -1,19 +1,18 @@
 const path = require('path')
-const fs   = require('fs')
-const { promisify } = require('util')
-const readFileAsync   = promisify(fs.readFile)
 
 async function connect(container) {
-  const { fileConverter, pathSettings } = container
+  const { fileConverter, file } = container
 
-  if (!fileConverter) {
-    throw new Error('missing required file dependency')
+  if (!fileConverter || !file) {
+    throw new Error('missing required dependencies')
   }
+
+  const { createReadStream } = file
 
   async function createProcess() {
     return new Promise((resolve, reject) => {
       const opts = {
-        inputformat: 'svg',
+        inputformat: 'html',
         outputformat: 'png'
       }
 
@@ -26,37 +25,52 @@ async function connect(container) {
     })
   }
 
-  async function startProcess(process, filename, filepath, opts={}) {
+  async function waitForProcessToFinish(process) {
     return new Promise((resolve, reject) => {
-      const callback = (err, process) => {
+      console.log('waiting for process to finish')
+      process.refresh()
+      process.wait((err, updatedProcess) => {
+        console.log('process has finished')
         if (err) {
+          process.delete();
+          return reject(err)
+        }
+        resolve(updatedProcess)
+      })
+    })
+  }
+
+  async function startProcess(process, file, opts={}) {
+    return new Promise((resolve, reject) => {
+      async function callback(err, process) {
+        if (err) {
+          process.delete()
           return reject(err)
         }
 
-        resolve(process)
+        resolve(await waitForProcessToFinish(process))
       }
+
+      const converteroptions = (opts.width && opts.height) ?
+      { resize: `${opts.width}x${opts.height}` } : {}
 
       const args = {
         wait: true,
         input: 'upload',
-        file: '',
-        filename,
         outputformat: 'png',
-        converteroptions: {
-          resize: `${opts.width}x${opts.height}`
-        }
+        converteroptions
       }
 
       process.start(args, callback)
 
       // Upload the file to start the process
-      process.upload(fs.createReadStream(path.resolve(filepath, filename)))
+      process.upload(createReadStream(file))
     })
   }
 
   async function downloadFile(process, path) {
     return new Promise((resolve, reject) => {
-      const ws = process.pipe(fs.createWriteStream(path))
+      const ws = process.pipe(file.createWriteStream(path))
 
       ws.on('finish', resolve)
       ws.on('error', reject)

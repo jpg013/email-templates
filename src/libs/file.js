@@ -1,4 +1,5 @@
 const fs                  = require('fs')
+const path                = require('path')
 const { promisify }       = require('util')
 
 const readDirAsync  = promisify(fs.readdir)
@@ -11,21 +12,26 @@ async function encodeFileBase64(file) {
   return new Buffer(bitmap).toString('base64')
 }
 
-const writeToFile = (string, filePath) => {
+const writeToFile = (string, file) => {
   return new Promise((resolve, reject) => {
-    const file = fs.createWriteStream(filePath)
-    file.on("finish", resolve);
-    file.on("error", reject)
+    const ws = fs.createWriteStream(file)
 
-    file.write(string)
-    file.end();
+    ws.on('finish', resolve);
+    ws.on('error', reject)
+    ws.write(string)
+    ws.end();
   });
 }
+
+const createWriteStream = filePath => fs.createWriteStream(filePath)
+const createReadStream = filePath => fs.createReadStream(filePath)
 
 module.exports = {
   readDirAsync,
   readFileAsync,
   encodeFileBase64,
   writeToFile,
-  unlinkFileAsync
+  unlinkFileAsync,
+  createWriteStream,
+  createReadStream
 }

@@ -2,7 +2,7 @@ function donutChart(d3) {
     var width,
         height,
         margin = {top: 10, right: 10, bottom: 10, left: 10},
-        colour = d3.scaleOrdinal(d3.schemeCategory20c), // colour scheme
+        colour = d3.scaleOrdinal(['#FF4F2F', '#6B6969', '#10CF50']), // colour scheme
         variable, // value in data that will dictate proportions on chart
         category, // compare data by
         padAngle, // effectively dictates the gap between slices
@@ -16,7 +16,8 @@ function donutChart(d3) {
 
             // ===========================================================================================
             // Set up constructors for making donut. See https://github.com/d3/d3-shape/blob/master/README.md
-            var radius = Math.min(width, height) / 2;
+            //var radius = Math.min(width, height) / 2; -- 250
+            const radius = 310
 
             // creates a new pie generator
             var pie = d3.pie()
@@ -44,14 +45,21 @@ function donutChart(d3) {
             var svg = selection.append('svg')
                 .attr('width', width + margin.left + margin.right)
                 .attr('height', height + margin.top + margin.bottom)
+                .style('-webkit-filter', 'drop-shadow( 0px 3px 3px rgba(0,0,0,.3) )')
+                .style('filter', 'drop-shadow( 0px 3px 3px rgba(0,0,0,.25) )')
               .append('g')
+                .style('background', 'pink')
                 .attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')');
             // ===========================================================================================
 
             // ===========================================================================================
             // g elements to keep elements within svg modular
             svg.append('g').attr('class', 'slices');
-            svg.append('g').attr('class', 'labelName');
+            svg.append('g').attr('class', 'labelName')
+              .style('font-family', 'sans-serif')
+              .style('font-weight', '700')
+              .style('font-style', 'normal')
+              .style('font-size', '22px');
             svg.append('g').attr('class', 'lines');
             // ===========================================================================================
 
@@ -73,7 +81,7 @@ function donutChart(d3) {
                 .attr('dy', '.35em')
                 .html(function(d) {
                     // add "key: value" for given category. Number inside tspan is bolded in stylesheet.
-                    return d.data[category] + ': <tspan>' + percentFormat(d.data[variable]) + '</tspan>';
+                    return d.data[category] + ': <tspan style="font-style: normal; font-weight: 700">' + percentFormat(d.data[variable]) + '</tspan>';
                 })
                 .attr('transform', function(d) {
 
@@ -97,6 +105,10 @@ function donutChart(d3) {
                 .selectAll('polyline')
                 .data(pie)
               .enter().append('polyline')
+                .style('opacity', '.3')
+                .style('stroke', 'black')
+                .style('stroke-width', '2px')
+                .style('fill', 'none')
                 .attr('points', function(d) {
 
                     // see label transform function for explanations of these three lines.
@@ -172,27 +184,27 @@ function donutChart(d3) {
     return chart;
 }
 
-function buildDonutChart(jsDom, d3) {
-  return (htmlStub, data) => {
-    // pass the html stub to jsDom
-    const dom = new jsDom(htmlStub, { runScripts: "dangerously" })
-    const document = dom.window.document
-    const datavizElement = d3.select(document.querySelector('#dataviz-container'))
+function buildDonutChart(dom, d3, data) {
+  const document = dom.window.document
+  const datavizElement = d3.select(document.querySelector('#dataviz-container'))
 
-    const donut = donutChart(d3)
-         .width(960)
-         .height(500)
-         .cornerRadius(3) // sets how rounded the corners are on each slice
-         .padAngle(0.025) // effectively dictates the gap between slices
-         .variable('percent')
-         .category('type');
+  const donut = donutChart(d3)
+       .width(960)
+       .height(500)
+       .cornerRadius(3) // sets how rounded the corners are on each slice
+       .padAngle(0.025) // effectively dictates the gap between slices
+       .variable('percent')
+       .category('type');
 
-    datavizElement
-      .datum(data)  // bind data to the div
-      .call(donut); // draw chart in div
+  datavizElement
+    .datum(data)  // bind data to the div
+    .call(donut); // draw chart in div
 
-    return document.firstElementChild.outerHTML
-  }
+  return document.querySelector('svg').outerHTML
+
+  // console.log(document.querySelector('svg').outerHTML)
+
+  // return document.firstElementChild.outerHTML
 }
 
 module.exports = buildDonutChart
