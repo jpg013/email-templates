@@ -1,0 +1,59 @@
+title: Email-Template Service
+version: v1
+baseUri: /email_templates
+
+resourceTypes:
+  POST:
+    body:
+      application/json:
+        type: <<item>>
+    responses:
+      200:
+        body:
+          application/json:
+            type: {
+              html: string,
+              attachments: [{
+                file: gzipped-binary,
+                content_id: number
+              }]
+            }
+
+/:
+  post: {
+        analysis_name: string,
+        analysis_link: string,
+        folder_name: string,
+        folder_link: string,
+        stream_start_date: datetime,
+        stream_end_date: datetime,
+        stream_refresh_period: string,
+        new_post_count: number,
+        analysis_source: string,
+        sentimentBreakDown: [
+          {
+            type: string,
+            percent: number
+          }
+        ],
+        volumeTrends: [
+          {
+            day: datetime,
+            neutralCount: number,
+            negativeCount: number,
+            positiveCount: number,
+            unknownCount: number
+          }
+        ],
+        posts: [
+          {
+            text: string,
+            subject_image_url: string,
+            comment_count: number,
+            retweet_count: number,
+            like_count: number,
+            location: string,
+            posted_date: datetime
+          }
+        ]
+      }

@@ -91,7 +91,7 @@ const APIController = container => {
 
     const svgFile = await svg.writeFileToSvg(tplFile)
     const pngFileData = await svg.convertSvgToPng(svgFile, tplFile.opts)
-
+    
     if (tplFile.cacheKey) {
       cacheRepository.set(tplFile.cacheKey, pngFileData)
     }

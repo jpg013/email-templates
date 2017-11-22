@@ -23,18 +23,18 @@ async function connect(container) {
   const makeTmpFilePath = fileName => path.resolve(pathSettings.tmpFileDir, fileName)
 
   async function writeFileToSvg(tplFile={}) {
+    const timestamp = new Date().getTime()
+    const file = makeTmpFilePath(`${tplFile.id}_${timestamp}.svg`)
+
     switch(tplFile.type) {
       case 'donut_chart_svg':
-        const timestamp = new Date().getTime()
         const dom = new JSDOM(tplFile.markup, { runScripts: "dangerously" })
-        const filepath = makeTmpFilePath(`${tplFile.id}_${timestamp}.svg`)
-        const htmlStr = buildDonutChart(dom, d3, tplFile.data)
-
-        await writeToFile(htmlStr, filepath)
-        return filepath
+        await writeToFile(buildDonutChart(dom, d3, tplFile.data), file)
       default:
-        return tplFile.markup
+        await writeToFile(tplFile.markup, file)
     }
+
+    return file
   }
 
   return {
