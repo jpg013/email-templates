@@ -1,24 +1,21 @@
 const file = require('../../libs/file')
 const path = require('path')
 
-function buildTemplateMap(templates, files, charts) {
-  return views.map(v => {
-    if (!v.files || !v.files.length) {
-      return v
-    }
+function buildTemplateMap(templates, charts) {
+  // Map reduce over templates
+  return templates.map(tpl => {
+    const tplCharts = tpl.charts.map(cur => {
+      const tplChart = charts.find(c => c.id === cur.id)
 
-    const mappedFiles = v.files.map(cur => {
-      const file = files.find(f => f.id === cur.id)
-
-      if (!file) {
-        throw new Error('missing file')
+      if (!tplChart) {
+        throw new Error('missing template chart')
       }
 
-      return Object.assign({}, cur, file)
+      return Object.assign({}, cur, tplChart)
     })
 
-    return Object.assign({}, v, {
-      files: mappedFiles
+    return Object.assign({}, tpl, {
+      charts: tplCharts
     })
   })
   .reduce((acc, cur) => {
@@ -42,8 +39,7 @@ async function loadTemplates(pathSettings) {
 
 module.exports = async (pathSettings, file) => {
   const templates = await loadTemplates(pathSettings)
-  const tplcharts = await loadTemplateCharts(pathSettings)
+  const tplCharts = await loadTemplateCharts(pathSettings)
 
-  // return buildTemplateMap(templateViews, templateFiles)
-  return templates
+  return buildTemplateMap(templates, tplCharts)
 }

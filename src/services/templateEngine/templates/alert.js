@@ -76,5 +76,5 @@ module.exports = {
   id: 'volume_change',
   markup,
   files: ['dunami_logo_icon', 'alert_warning_icon', 'plus_icon'],
-  chart: []
+  charts: []
 }
