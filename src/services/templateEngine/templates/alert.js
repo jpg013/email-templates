@@ -11,11 +11,11 @@ const markup = `
     <table align="center" border="1" cellpadding="0" cellspacing="0" width="800" style="border-collapse: collapse;">
       <tr bgcolor="#EAEAEB" height="60">
         <td width="430" height="60" style="padding-left: 10px">
-          <image style="display: block" height="60" width="135" width: alt="Dunami Logo" src="data:image/png;base64, <%- files[0].base64Str %>"></image>
+          <image style="display: block" height="60" width="135" width: alt="Dunami Logo" src="data:image/png;base64, <%- files[0] %>"></image>
         </td>
 
         <td width="40" height="60" align="right">
-          <image height="26" width="24" src="data:image/png;base64, <%- files[1].base64Str %>"></image>
+          <image height="26" width="24" src="data:image/png;base64, <%- files[1] %>"></image>
         </td>
 
         <td width="330" height="60" style="padding-right: 10px; letter-spacing: .7px" align="right">
@@ -49,7 +49,7 @@ const markup = `
             <tr height="60" bgcolor="pink">
 
               <td valign="top">
-                <image style="display: block" height="45" width="45" width: alt="Plus Icon" src="data:image/png;base64, <%- files[2].base64Str %>"></image>
+                <image style="display: block" height="45" width="45" width: alt="Plus Icon" src="data:image/png;base64, <%- files[2] %>"></image>
               </td>
             </tr>
           </table>
@@ -73,8 +73,8 @@ const markup = `
 `
 
 module.exports = {
-  id: 'volume_change',
+  id: 'alerts',
   markup,
-  files: ['dunami_logo_icon', 'alert_warning_icon', 'plus_icon'],
+  files: ['dunami_logo_icon.png', 'alert_warning_icon.png', 'plus_icon.png'],
   charts: []
 }

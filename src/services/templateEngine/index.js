@@ -10,26 +10,19 @@ async function connect(container) {
 
   const templateMap = await makeTemplateMap(pathSettings)
 
-  function compileVolumeChangeTemplate(data) {
-    const tpl = templateMap.volume_change
+  function compileTemplate(name, data) {
+    const tpl = templateMap[name]
 
     if (!tpl) {
-      throw new Error('missing required template')
+      throw new Error('invalid template')
     }
 
-    const files = tpl.files.map(cur => {
-      if (!cur.dataProp) {
-        return cur
-      }
-
-      return Object.assign({}, cur, {
-        data: data[cur.dataProp]
-      })
-    })
+    const { markup, charts, files } = tpl
 
     // Compile the tpl
     return {
-      compiledTpl: ejs.compile(tpl.markup, {}),
+      compiledMarkup: ejs.compile(markup, {}),
+      charts,
       files
     }
   }
@@ -39,7 +32,7 @@ async function connect(container) {
   }
 
   return {
-    compileVolumeChangeTemplate,
+    compileTemplate,
     renderTemplate
   }
 }

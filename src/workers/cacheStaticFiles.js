@@ -21,12 +21,8 @@ async function connect(container) {
     // Read in files
     await Promise.all(dirFiles.map(async f => {
       const bitmap = await readFileStreamAsync(path.resolve(pathSettings.fileDir, f))
-      const base64Str = encodeFileBase64(bitmap)
 
-      await cacheRepository.set(f, {
-        bitmap,
-        base64Str
-      })
+      await cacheRepository.set(f, bitmap.toString('base64'))
     }))
   }
 }
