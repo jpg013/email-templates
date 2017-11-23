@@ -1,7 +1,7 @@
 const file = require('../../libs/file')
 const path = require('path')
 
-function mapTemplateViewFiles(views, files) {
+function buildTemplateMap(templates, files, charts) {
   return views.map(v => {
     if (!v.files || !v.files.length) {
       return v
@@ -27,21 +27,23 @@ function mapTemplateViewFiles(views, files) {
   }, {})
 }
 
-async function loadTemplateFiles() {
-  // Read in svgs
-  const files = await file.readDirAsync(path.resolve(__dirname, 'files'))
-  return files.map(f => require(`./files/${f}`))
+
+async function loadTemplateCharts(pathSettings) {
+  // Read in charts
+  const charts = await file.readDirAsync(pathSettings.templateChartsDir)
+  return charts.map(c => require(path.resolve(pathSettings.templateChartsDir, c)))
 }
 
-async function loadTemplateViews() {
-  // Read in views
-  const views = await file.readDirAsync(path.resolve(__dirname, 'views'))
-  return views.map(v => require(`./views/${v}`))
+async function loadTemplates(pathSettings) {
+  // Read in templates
+  const tpls = await file.readDirAsync(pathSettings.templateDir)
+  return tpls.map(t => require(path.resolve(pathSettings.templateDir, t)))
 }
 
-module.exports = async () => {
-  const templateViews = await loadTemplateViews()
-  const templateFiles = await loadTemplateFiles()
+module.exports = async (pathSettings, file) => {
+  const templates = await loadTemplates(pathSettings)
+  const tplcharts = await loadTemplateCharts(pathSettings)
 
-  return mapTemplateViewFiles(templateViews, templateFiles)
+  // return buildTemplateMap(templateViews, templateFiles)
+  return templates
 }

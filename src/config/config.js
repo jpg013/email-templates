@@ -10,7 +10,11 @@ const cacheSettings = {
 }
 
 const pathSettings = {
-  tmpFileDir: path.resolve(appDir, 'tmp_files')
+  tmpFileDir: path.resolve(appDir, 'static', 'tmp_files'),
+  fileDir: path.resolve(appDir, 'static', 'files'),
+  templateDir: path.resolve(appDir, 'services', 'templateEngine', 'templates'),
+  templateFilesDir: path.resolve(appDir, 'services', 'templateEngine', 'files'),
+  templateChartsDir: path.resolve(appDir, 'services', 'templateEngine', 'charts'),
 }
 
 const cdnSettings = {

@@ -3,8 +3,6 @@ function initDI ({
   pathSettings,
   cacheSettings,
   cache,
-  cdn,
-  cdnSettings,
   fileConverterSettings,
   fileConverter,
   file
@@ -19,7 +17,6 @@ function initDI ({
       container.pathSettings = Object.assign({}, pathSettings)
       container.fileConverterSettings = Object.assign({}, fileConverterSettings)
       container.cache = cache
-      container.cdn = cdn.connect(cdnSettings)
       container.fileConverter = fileConverter.connect(fileConverterSettings)
       container.file = Object.assign({}, file)
 

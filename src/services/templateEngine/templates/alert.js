@@ -75,30 +75,6 @@ const markup = `
 module.exports = {
   id: 'volume_change',
   markup,
-  files: [
-    {
-      id: 'dunami_logo_icon'
-    },
-    {
-      id: 'alert_warning_icon'
-    },
-    {
-      id: 'plus_icon'
-    }
-  ]
-  /*
-  files: [
-    {
-      id: 'dunami_logo_icon'
-    },
-    {
-      id: 'alert_warning_icon'
-    },
-    {
-      id: 'donut_chart',
-      dataProp: 'sentiment'
-    }
-  ]
-  */
-
+  files: ['dunami_logo_icon', 'alert_warning_icon', 'plus_icon'],
+  chart: []
 }

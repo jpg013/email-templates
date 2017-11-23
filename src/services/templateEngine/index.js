@@ -2,7 +2,13 @@ const ejs             = require('ejs')
 const makeTemplateMap = require("./makeTemplateMap")
 
 async function connect(container) {
-  const templateMap = await makeTemplateMap()
+  const { pathSettings } = container
+
+  if (!pathSettings) {
+    throw new Error('missing required dependency')
+  }
+
+  const templateMap = await makeTemplateMap(pathSettings)
 
   function compileVolumeChangeTemplate(data) {
     const tpl = templateMap.volume_change

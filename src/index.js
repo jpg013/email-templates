@@ -23,14 +23,18 @@ process.on('uncaughtRejection', (err, promise) => {
 
 async function onDIReady(container) {
   try {
-    container.workers = await workers.connect(container)
-    winston.log('info', 'Connected to workers')
-
     container.repositories = await repositories.connect(container)
     winston.log('info', 'Connected to repositories')
 
+    container.workers = await workers.connect(container)
+    winston.log('info', 'Connected to workers')
+
     container.services = await services.connect(container)
     winston.log('info', 'Connected to services')
+
+    const { cacheStaticFiles } = container.workers
+
+    await cacheStaticFiles()
 
     const app = await server.start(container)
 
