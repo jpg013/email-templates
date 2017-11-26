@@ -10,7 +10,7 @@ async function connect(container) {
 
   const templateMap = await makeTemplateMap(pathSettings)
 
-  function compileTemplate(name, data) {
+  function compileTemplate(name, opts={}) {
     const tpl = templateMap[name]
 
     if (!tpl) {
@@ -21,7 +21,7 @@ async function connect(container) {
 
     // Compile the tpl
     return {
-      compiledMarkup: ejs.compile(markup, {}),
+      compiledMarkup: ejs.compile(markup, opts),
       charts,
       files
     }

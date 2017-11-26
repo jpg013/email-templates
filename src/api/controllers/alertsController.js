@@ -1,21 +1,21 @@
 const express    = require('express')
 const httpStatus = require('http-status-codes')
 const moment     = require('moment')
-const dial       = require('../../libs/dial')
 const path       = require('path')
 
-const connect = container => {
-  const { services, repositories, pathSettings } = container
+const ALERTS_TEMPLATE_ID = 'alerts'
 
-  if (!services || !repositories) {
-    throw new Error('missing required dependencies')
+const connect = container => {
+  const { services, repository, pathSettings, models } = container
+
+  if (!services || !repository || !pathSettings || !models) {
+    throw new Error('missing required dependency')
   }
 
-  const { templateEngine, svg } = services
-  const { cacheRepository } = repositories
+  const { templateEngine, d3Charts, svgToPng } = services
 
-  if (!templateEngine || !svg || !cacheRepository) {
-    throw new Error('missing required dependencies')
+  if (!templateEngine || !d3Charts || !svgToPng) {
+    throw new Error('missing required dependency')
   }
 
   const controller = express.Router()
@@ -48,38 +48,6 @@ const connect = container => {
     }
   }
 
-  function sendEmailTemplate({html, attachments}) {
-    const body = {
-      'personalizations': [
-        {
-          to: [{email: 'justin.graber@dunami.com'}],
-          subject: 'Hello, World!'
-        }
-      ],
-      from: {
-        email: 'dev@innosolpro.com'
-      },
-      content: [
-        {
-          type: 'text/html',
-          value: html
-        }
-      ],
-      // attachments
-    }
-
-    const headers = {
-      Authorization: `Bearer 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`
-    }
-
-    const opts = {
-      headers,
-      json: body
-    }
-
-    //dial('https://api.sendgrid.com/v3/mail/send', 'post', opts)
-  }
-
   async function buildTemplateFile(tplFile) {
     const cachedFile = tplFile.cacheKey ?
       await cacheRepository.get(tplFile.cacheKey) :
@@ -103,22 +71,19 @@ const connect = container => {
   // Controller Methods
   // ======================================================
   async function handlePostAlerts(req, res, next) {
+    alertTemplateData
     try {
       const templateId = 'alerts'
-      const alertData = req.body
 
-      const compiledTpl = templateEngine.compileTemplate(templateId, alertData)
+      const compiledTpl = templateEngine.compileTemplate(templateId)
       const files = await Promise.all(compiledTpl.files.map(f => cacheRepository.get(f)))
 
       const renderArgs = {
-        ...alertData,
+        ...alertTemplateData,
         files
       }
 
       req.results = templateEngine.renderTemplate(compiledTpl.compiledMarkup, renderArgs)
-
-      // This is complete test code, remove once finished
-      // sendEmailTemplate(results)
     } catch(e) {
       console.log(e)
       req.error = e
@@ -127,34 +92,34 @@ const connect = container => {
     }
   }
 
-  function generateFakeRequestData(req, res, next) {
-    req.body = {
-      analysisName: 'kbhersh',
-      analysisLink: 'https://appdev.dunami.com/#/channel/1169/analysis/13504/posts',
-      folderName: 'KC Devs',
-      sentiment: [
-        {
-          type: 'Negative',
-          percent: .20
-        },
-        {
-          type: 'Neutral',
-          percent: .30
-        },
-        {
-          type: 'Positive',
-          percent: .50
-        }
-      ]
+  async function validateRequest(req, res, next) {
+    try {
+      req.alertTemplateData = await models.validate(req.body, 'alertTemplateData')
+      next()
+    } catch({ details }) {
+      console.log(details)
+      return res.status(httpStatus.BAD_REQUEST).send({errors: details.map(cur => ({ message: cur.message }))})
     }
+  }
 
+  function compileTemplate(req, res, next) {
+    try {
+      req.compiledTemplate = templateEngine.compileTemplate(ALERTS_TEMPLATE_ID)
+    } catch(e) {
+      // handle error
+    }
     next()
+  }
+
+  async function compileTemplateFiles(req, res, next) {
+    const { compiledTemplate } = req
+    const files = await Promise.all(compiledTpl.files.map(f => cacheRepository.get(f)))
   }
 
   // ======================================================
   // Controller Routes
   // ======================================================
-  controller.get('/', generateFakeRequestData, handlePostAlerts, responseHandler)
+  controller.post('/', validateRequest, compileTemplate, handlePostAlerts, responseHandler)
 
   return controller
 }

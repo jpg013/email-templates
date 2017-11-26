@@ -3,9 +3,9 @@ const fs            = require('fs')
 const { promisify } = require('util')
 const winston       = require('winston')
 
-const readDirAsync   = promisify(fs.readdir)
-const unlinkAsync = promisify(fs.unlink)
-const statAsync = promisify(fs.stat)
+const readDirAsync = promisify(fs.readdir)
+const unlinkAsync  = promisify(fs.unlink)
+const statAsync    = promisify(fs.stat)
 
 function logJob(err, dirPath) {
   if (err) {
@@ -34,24 +34,14 @@ async function cleanupDir(cb, dirPath) {
   await Promise.all(filesNeedDeleted.map(cur => unlinkAsync(`${dirPath}/${cur.fileName}`)))
 }
 
-function connect(container) {
-  const { pathSettings } = container
-
-  if (!pathSettings) {
-    throw new Error('missing required dependency')
-  }
-
-  return () => {
-    const dirpath = pathSettings.tmpFileDir
-
-    return new CronJob(
-      '0 */1 * * * *', // Every 1 minute
-      cb => cleanupDir(cb, dirpath).then(cb).catch(cb),
-      err => logJob(err, dirpath),
-      true,
-      'America/Los_Angeles'
-    )
-  }
+function cleanupTmpFiles(dirPath) {
+  return new CronJob(
+    '0 */1 * * * *', // Every 1 minute
+    cb => cleanupDir(cb, dirPath).then(cb).catch(cb),
+    err => logJob(err, dirPath),
+    true,
+    'America/Los_Angeles'
+  )
 }
 
- module.exports = Object.create({connect})
+ module.exports = cleanupTmpFiles

@@ -7,7 +7,7 @@ const {
 const di            = require('./di')
 const cache         = require('./cache')
 const fileConverter = require('./fileConverter')
-const file          = require('../libs/file')
+const models        = require('../lib/models')
 
 const bindArgs = {
   serverSettings,
@@ -16,7 +16,7 @@ const bindArgs = {
   cache,
   fileConverterSettings,
   fileConverter,
-  file
+  models
 }
 
 const init = di.initDI.bind(null, bindArgs)

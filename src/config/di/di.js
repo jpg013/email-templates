@@ -5,7 +5,8 @@ function initDI ({
   cache,
   fileConverterSettings,
   fileConverter,
-  file
+  file,
+  models
 }, mediator) {
 
   mediator.once('init', () => {
@@ -19,6 +20,7 @@ function initDI ({
       container.cache = cache
       container.fileConverter = fileConverter.connect(fileConverterSettings)
       container.file = Object.assign({}, file)
+      container.models = Object.assign({}, models)
 
       mediator.emit('di.ready', container)
     })

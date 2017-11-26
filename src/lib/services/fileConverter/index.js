@@ -1,13 +1,11 @@
-const path = require('path')
+const fs = require('fs')
 
 async function connect(container) {
-  const { fileConverter, file } = container
+  const { fileConverter} = container
 
-  if (!fileConverter || !file) {
+  if (!fileConverter) {
     throw new Error('missing required dependencies')
   }
-
-  const { createReadStream } = file
 
   async function createProcess() {
     return new Promise((resolve, reject) => {
@@ -64,13 +62,13 @@ async function connect(container) {
       process.start(args, callback)
 
       // Upload the file to start the process
-      process.upload(createReadStream(file))
+      process.upload(fs.createReadStream(file, { encoding: undefined }))
     })
   }
 
-  async function downloadFile(process, path) {
+  async function downloadFile(process, file) {
     return new Promise((resolve, reject) => {
-      const ws = process.pipe(file.createWriteStream(path))
+      const ws = process.pipe(fs.createWriteStream(file, { encoding: undefined }))
 
       ws.on('finish', resolve)
       ws.on('error', reject)
