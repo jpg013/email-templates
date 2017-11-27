@@ -23,9 +23,9 @@ async function connect(container) {
     });
   }
 
-  async function convertSvgToPng(fileConverter, svgFile, opts={}) {
-    const uuid = uuidV4()
-    const pngFile = makeTmpFilePath(`${uuid}.png`)
+  async function convertSvgToPng(fileId, svgFile, fileConverter, opts={}) {
+    const cid = `${fileId}_${uuidV4()}`
+    const file = makeTmpFilePath(`${cid}.png`)
 
     let process
 
@@ -36,7 +36,7 @@ async function connect(container) {
         opts
       )
 
-      await fileConverter.downloadFile(process, pngFile)
+      await fileConverter.downloadFile(process, file)
     } catch(e) {
       winston.log('error', e)
     } finally {
@@ -45,12 +45,11 @@ async function connect(container) {
       }
     }
 
-    return pngFile
+    return { file, cid }
   }
 
-  async function writeSvgToFile(svg) {
-    const uuid = uuidV4()
-    const file = makeTmpFilePath(`${uuid}.svg`)
+  async function writeSvgToFile(fileId, compiledSvgChart) {
+    const file = makeTmpFilePath(`${fileId}_${uuidV4()}.svg`)
 
     await writeToFile(svg, file)
     return file

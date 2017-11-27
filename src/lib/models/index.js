@@ -1,8 +1,10 @@
 const joi                       = require('joi')
 const alertTemplateRequestModel = require('./alertTemplateRequestModel')
+const templateModel             = require('./templateModel')
 
 const models = Object.create({
-  alertTemplateRequest: alertTemplateRequestModel(joi)
+  alertTemplateRequest: alertTemplateRequestModel(joi),
+  template: templateModel(joi)
 })
 
 const schemaValidator = (object, type) => {

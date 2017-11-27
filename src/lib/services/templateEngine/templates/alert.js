@@ -28,7 +28,7 @@ const markup = `
       <tr bgcolor="#F4F4F4" height="100">
         <td colspan="3" style="padding-left: 10px;">
           <font size="3" color="#59595a" face="sans-serif">
-            Your <a style="color: #15D399; text-decoration: none !important; color: " href="<%= analysisLink %> "> <%= analysisName %> </a> analysis in the <%= folderName %> folder has had a significant volume change.
+            Your <a style="color: #15D399; text-decoration: none !important; color: " href="<%= analysis_link %> "> <%= analysis_name %> </a> analysis in the <%= folder_name %> folder has had a significant volume change.
           </font>
         </td>
       </tr>
@@ -75,22 +75,21 @@ const markup = `
 module.exports = {
   id: 'alert_template',
   markup,
-  images: [
-    {
-      file_name: 'dunami_logo_icon.png',
-      content_id: 1
-    },
-    {
-      file_name: 'alert_warning_icon.png',
-      content_id: 2
-    },
-    {
-      file_name: 'plus_icon.png',
-      content_id: 3
-    }
-  ],
+  images: [{
+    file: 'dunami_logo_icon.png',
+    content_id: 'dunami_logo_icon'
+  },
+  {
+    file: 'alert_warning_icon.png',
+    content_id: 'alert_warning_icon'
+  },
+  {
+    file: 'plus_icon.png',
+    content_id: 'plus_icon'
+  }],
   charts: [{
     id: 'donut_chart',
+    content_id: undefined,
     dataProp: 'sentiment'
   }]
 }

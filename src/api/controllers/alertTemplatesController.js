@@ -19,36 +19,18 @@ const connect = container => {
   const { buildD3Chart } = d3Charts
   const { convertSvgToPng, writeSvgToFile } = svgToPng
   const { compileTemplate } = templateEngine
+
   const controller = express.Router()
 
   // ======================================================
-  // Response Error Messages
+  // Response Handling
   // ======================================================
-  const getErrorResponse = error => {
-    switch(error) {
-      case 'Bad request data.':
-        return {
-          status: 400,
-          error
-        }
-      default:
-        return {
-          status: 500,
-          error
-        }
-    }
-  }
-
   const handleResponse = (req, res) => {
     if (req.error) {
-      const { status, error } = getErrorResponse(req.error)
-      res.status(status).send({error})
+      const { message, status } = req.error
+      res.status(status || httpStatus.INTERNAL_SERVER_ERROR).send({message})
     } else {
-      console.log(req.compiledTemplate.images)
-      console.log(req.compiledTemplate.charts)
-
-      const { results } = req
-      res.status(httpStatus.OK).send(results)
+      res.status(httpStatus.OK).send(req.templateModel)
     }
   }
 
@@ -91,7 +73,7 @@ const connect = container => {
       const cachedValue = await repository.get(templateId)
       req.compiledTemplate = cachedValue ? cachedValue : compileTemplate(templateId)
       // F&F cache
-      repository.set(templateId, req.compiledTemplate)
+      //repository.set(templateId, req.compiledTemplate)
       next()
     } catch(e) {
       console.log(e)
@@ -99,27 +81,57 @@ const connect = container => {
     }
   }
 
-  async function renderTemplateCharts(req, res, next) {
+  function renderTemplateChart(fileId, markup, data) {
+    const compiledSvgChart = buildD3Chart(fileId, markup, templateDataModel[dataProp])
+
+    return writeSvgToFile(fileId, compiledSvgChart)
+      .then(svgFile => convertSvgToPng(fileId, svgFile, fileConverter))
+  }
+
+  async function makeTemplateFiles(req, res, next) {
     const { templateDataModel, compiledTemplate } = req
+    const { images, charts } = compiledTemplate
+    const files = [].concat(images)
 
-    compiledTemplate.charts = await Promise.all(compiledTemplate.charts.map(async chart => {
-      const { id, dataProp, markup } = chart
-
-      const compiledSvgChart = buildD3Chart(id, markup, templateDataModel[dataProp])
-
-      const svgFile = await writeSvgToFile(compiledSvgChart)
-      const pngFile = await convertSvgToPng(fileConverter, svgFile)
-
-      return pngFile
-    }))
+    req.templateFiles = await Promise.all(files)
 
     next()
+
+    //compiledTemplate.charts = await Promise.all(compiledTemplate.charts.map(async chart => {
+      //const { id, dataProp, markup } = chart
+
+      //return pngFile
+    //}))
+
+    //next()
+  }
+
+  async function makeTemplateModel(req, res, next) {
+    const { compiledTemplate, templateDataModel, templateFiles: files } = req
+
+    try {
+      const renderArgs = {
+        ...templateDataModel,
+        files
+      }
+
+      const templateModelData = {
+        html: compiledTemplate.render(renderArgs),
+        files
+      }
+
+      req.templateModel = await models.validate(templateModelData, 'template')
+      next()
+    } catch(err) {
+      // TODO: handle error
+      console.log(err)
+    }
   }
 
   // ======================================================
   // Controller Routes
   // ======================================================
-  controller.post('/', validateRequest, makeCompiledTemplate.bind(null, ALERT_TEMPLATE_ID), renderTemplateCharts, handleResponse)
+  controller.post('/', validateRequest, makeCompiledTemplate.bind(null, ALERT_TEMPLATE_ID), makeTemplateFiles, makeTemplateModel, handleResponse)
 
   return controller
 }
