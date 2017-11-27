@@ -1,9 +1,7 @@
 const express    = require('express')
 const httpStatus = require('http-status-codes')
-const moment     = require('moment')
-const path       = require('path')
 
-const ALERTS_TEMPLATE_ID = 'alerts'
+const ALERT_TEMPLATE_ID = 'alert_template'
 
 const connect = container => {
   const { services, repository, pathSettings, models } = container
@@ -18,6 +16,9 @@ const connect = container => {
     throw new Error('missing required dependency')
   }
 
+  const { buildD3Chart } = d3Charts
+  const { convertSvgToPng, writeSvgToFile } = svgToPng
+  const { compileTemplate } = templateEngine
   const controller = express.Router()
 
   // ======================================================
@@ -38,9 +39,9 @@ const connect = container => {
     }
   }
 
-  const responseHandler = (req, res) => {
+  const handleResponse = (req, res) => {
     if (req.error) {
-      const {status, error} = getErrorResponse(req.error)
+      const { status, error } = getErrorResponse(req.error)
       res.status(status).send({error})
     } else {
       const {results} = req
@@ -71,7 +72,6 @@ const connect = container => {
   // Controller Methods
   // ======================================================
   async function handlePostAlerts(req, res, next) {
-    alertTemplateData
     try {
       const templateId = 'alerts'
 
@@ -94,32 +94,54 @@ const connect = container => {
 
   async function validateRequest(req, res, next) {
     try {
-      req.alertTemplateData = await models.validate(req.body, 'alertTemplateData')
+      req.templateDataModel = await models.validate(req.body, 'alertTemplateRequest')
       next()
-    } catch({ details }) {
-      console.log(details)
-      return res.status(httpStatus.BAD_REQUEST).send({errors: details.map(cur => ({ message: cur.message }))})
+    } catch(err) {
+
+      return res.status(httpStatus.BAD_REQUEST).send({err: err})
     }
   }
 
-  function compileTemplate(req, res, next) {
+  async function makeCompiledTemplate(templateId, req, res, next) {
     try {
-      req.compiledTemplate = templateEngine.compileTemplate(ALERTS_TEMPLATE_ID)
+      let compiledTpl = await repository.get(templateId)
+
+      if (!req.compiledTemplate) {
+        compiledTpl = templateEngine.compileTemplate(templateId)
+      }
+      // Fire and forget cache
+      repository.set(templateId, compiledTpl)
+      req.compiledTemplate = compiledTpl
+
+      next()
     } catch(e) {
-      // handle error
+      console.log(e)
+      // TODO: handle error
     }
-    next()
   }
 
-  async function compileTemplateFiles(req, res, next) {
-    const { compiledTemplate } = req
-    const files = await Promise.all(compiledTpl.files.map(f => cacheRepository.get(f)))
+  async function renderTemplateCharts(req, res, next) {
+    const { templateDataModel, compiledTemplate } = req
+
+    req.results = Object.assign({}, {
+      ...req.compiledTemplate,
+    })
+
+    next()
+
+    // await Promise.all(compiledTemplate.charts.map(async c => {
+      //const chartData =
+      //await writeSvgToFile()
+
+      //const { buildD3Chart } = d3Charts
+      //const { convertSvgToPng, writeSvgToFile } = svgToPng
+    // }))
   }
 
   // ======================================================
   // Controller Routes
   // ======================================================
-  controller.post('/', validateRequest, compileTemplate, handlePostAlerts, responseHandler)
+  controller.post('/', validateRequest, makeCompiledTemplate.bind(null, ALERT_TEMPLATE_ID), renderTemplateCharts, handleResponse)
 
   return controller
 }

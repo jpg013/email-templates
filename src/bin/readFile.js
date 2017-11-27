@@ -1,14 +1,16 @@
 const fs = require('fs')
 
-function readFile(file, opts={ encoding: undefined }) {
+function readFile(file, opts={}) {
   return new Promise((resolve, reject) => {
     try {
-      const rs = fs.createReadStream(file, {encoding: undefined}) // Buffer Stream
-      let bitmap = new Buffer('')
+      const readStream = fs.createReadStream(file, opts) // Buffer Stream
+      let bitmap = Buffer.from('')
 
       readStream.on('data', chunk => bitmap = Buffer.concat([bitmap, chunk]))
       readStream.on('end', () => resolve(bitmap))
-      readStream.on('error', err => throw new Error(err))
+      readStream.on('error', err => {
+        throw new Error(err)
+      })
     } catch(e) {
       reject(e)
     }

@@ -1,4 +1,4 @@
-const alertTemplateDataModel = joi => {
+const alertTemplateRequestModel = joi => {
   const schema = {
     alert_types: joi.array().min(1).required(),
     analysis_name: joi.string().required(),
@@ -9,6 +9,7 @@ const alertTemplateDataModel = joi => {
     stream_end_date: joi.date().required(),
     stream_refresh_period: joi.string().required(),
     new_post_count: joi.number().required(),
+    sentiment: joi.array(),
     __type: joi.string().default('alert', 'type of model')
   }
 
@@ -18,7 +19,35 @@ const alertTemplateDataModel = joi => {
       stream_start_date, stream_end_date, stream_refresh_period, new_post_count
     } = object;
 
-    return joi.validate(object, schema)
+    const sentiment = [
+      {
+        type: 'Positive',
+        percent: .50
+      },
+      {
+        type: 'Negative',
+        percent: .3
+      },
+      {
+        type: 'Neutral',
+        percent: .2
+      }
+    ]
+
+    const schemaData = {
+      alert_types,
+      analysis_name,
+      analysis_link,
+      folder_name,
+      folder_link,
+      stream_start_date,
+      stream_end_date,
+      stream_refresh_period,
+      new_post_count,
+      sentiment
+    }
+
+    return joi.validate(schemaData, schema)
   }
 
   return {
@@ -26,4 +55,4 @@ const alertTemplateDataModel = joi => {
   }
 }
 
-module.exports = alertTemplateDataModel
+module.exports = alertTemplateRequestModel

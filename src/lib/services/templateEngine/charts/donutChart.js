@@ -31,7 +31,5 @@ const markup = `<!DOCTYPE html>
 
 module.exports = {
   id: 'donut_chart',
-  cacheKey: 'donutChart',
-  type: 'donut_chart_svg',
   markup
 }

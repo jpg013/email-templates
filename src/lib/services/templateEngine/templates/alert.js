@@ -73,8 +73,24 @@ const markup = `
 `
 
 module.exports = {
-  id: 'alerts',
+  id: 'alert_template',
   markup,
-  files: ['dunami_logo_icon.png', 'alert_warning_icon.png', 'plus_icon.png'],
-  charts: []
+  images: [
+    {
+      file_name: 'dunami_logo_icon.png',
+      content_id: 1
+    },
+    {
+      file_name: 'alert_warning_icon.png',
+      content_id: 2
+    },
+    {
+      file_name: 'plus_icon.png',
+      content_id: 3
+    }
+  ],
+  charts: [{
+    id: 'donut_chart',
+    dataProp: 'sentiment'
+  }]
 }

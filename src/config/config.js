@@ -10,8 +10,9 @@ const cacheSettings = {
 }
 
 const pathSettings = {
-  tmpFileDir: path.resolve(appDir, 'bin', 'tmpFiles'),
-  fileDir: path.resolve(appDir, 'bin', 'staticFiles'),
+  tmpFileDir: path.resolve(appDir, 'public', 'tmp'),
+  fileDir: path.resolve(appDir, 'public', 'static'),
+  staticImagesDir: path.resolve(appDir, 'public', 'static'),
   templatesDir: path.resolve(appDir, 'lib', 'services', 'templateEngine', 'templates'),
   templateChartsDir: path.resolve(appDir, 'lib', 'services', 'templateEngine', 'charts')
 }
