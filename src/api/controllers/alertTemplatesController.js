@@ -1,12 +1,13 @@
 const express    = require('express')
 const httpStatus = require('http-status-codes')
+const readFile   = require('../../bin/readFile')
 
 const ALERT_TEMPLATE_ID = 'alert_template'
 
 const connect = container => {
-  const { services, repository, pathSettings, models } = container
+  const { services, repository, pathSettings, models, fileHelpers } = container
 
-  if (!services || !repository || !pathSettings || !models) {
+  if (!services || !repository || !pathSettings || !models || !fileHelpers) {
     throw new Error('missing required dependency')
   }
 
@@ -88,10 +89,27 @@ const connect = container => {
       .then(svgFile => convertSvgToPng(fileId, svgFile, fileConverter))
   }
 
+  function loadImageIfNotInCache(id) {
+    return repository.exists(id)
+      .then(val => {
+        if (val) {
+          return
+        }
+
+        fileHelpers.readStaticImg(id)
+          .then(fileHelpers.deflateFile)
+          .then(zippedValue => repository.set(id, zippedValue.toString('base64')))
+    })
+  }
+
   async function makeTemplateFiles(req, res, next) {
     const { templateDataModel, compiledTemplate } = req
     const { images, charts } = compiledTemplate
-    const files = [].concat(images)
+
+    // Make sure images are loading into the cache
+    images.forEach(({file: id}) => loadImageIfNotInCache(id) )
+
+    const files = images.slice()
 
     req.templateFiles = await Promise.all(files)
 

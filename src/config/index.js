@@ -8,11 +8,13 @@ const di            = require('./di')
 const cache         = require('./cache')
 const fileConverter = require('./fileConverter')
 const models        = require('../lib/models')
+const fileHelpers   = require('../bin/fileHelpers')
 
 const bindArgs = {
   serverSettings,
   cacheSettings,
   pathSettings,
+  fileHelpers,
   cache,
   fileConverterSettings,
   fileConverter,

@@ -16,9 +16,16 @@ async function connect(container) {
     })
   }
 
+  function exists(key) {
+    return new Promise((resolve, reject) => {
+      cache.exists(key, (err, val) => err ? reject(err) : resolve(val))
+    })
+  }
+
   return {
     get,
-    set
+    set,
+    exists
   }
 }
 
