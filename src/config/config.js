@@ -13,7 +13,8 @@ const awsSettings = {
   base_url: process.env.AWS_S3_URL || 'https://s3.us-east-2.amazonaws.com',
   bucket_name: process.env.AWS_S3_BUCKET || 'dunamitest',
   id: process.env.AWS_ACCESS_KEY_ID,
-  key: process.env.AWS_SECRET_ACCESS_KEY
+  key: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION || 'us-east-1'
 }
 
 const pathSettings = {

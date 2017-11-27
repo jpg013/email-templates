@@ -1,8 +1,11 @@
 var AWS  = require('aws-sdk');
 
-const s3 = new AWS.S3();
+function connect({base_url, bucket_name, region}) {
+  console.log(region)
 
-function connect({base_url, bucket_name}) {
+  AWS.config.update({region});
+  const s3 = new AWS.S3();
+
   const headObject = key => {
     const args = {
       Bucket: bucket_name,
@@ -19,11 +22,12 @@ function connect({base_url, bucket_name}) {
     })
   }
 
-  const putObject = (key, objectData) => {
+  const putObject = (key, objectData, opts={}) => {
     const args = {
       Bucket: bucket_name,
       Key: key,
-      Body: objectData
+      Body: objectData,
+      ...opts
     }
 
     return new Promise((resolve, reject) => {
