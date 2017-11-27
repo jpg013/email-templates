@@ -11,11 +11,19 @@ const markup = `
     <table align="center" border="1" cellpadding="0" cellspacing="0" width="800" style="border-collapse: collapse;">
       <tr bgcolor="#EAEAEB" height="60">
         <td width="430" height="60" style="padding-left: 10px">
-          <image style="display: block" height="60" width="135" width: alt="Dunami Logo" src="data:image/png;base64, <%- files[0] %>"></image>
+          <% if (embedFiles) { %>
+            <image style="display: block" height="60" width="135" width: alt="Dunami Logo" src="data:image/png;base64, <%- files[0].base_64_string %>"></image>
+          <% } else { %>
+            <image style="display: block" height="60" width="135" width: alt="Dunami Logo" src="cid:<%- files[0].content_id %>"></image>
+          <% } %>
         </td>
 
         <td width="40" height="60" align="right">
-          <image height="26" width="24" src="data:image/png;base64, <%- files[1] %>"></image>
+          <% if (embedFiles) { %>
+            <image height="26" width="24" src="data:image/png;base64, <%- files[1].base_64_string %>"></image>
+          <% } else { %>
+            <image height="26" width="24" src="cid:<%- files[1].content_id %>"></image>
+          <% } %>
         </td>
 
         <td width="330" height="60" style="padding-right: 10px; letter-spacing: .7px" align="right">
@@ -49,7 +57,11 @@ const markup = `
             <tr height="60" bgcolor="pink">
 
               <td valign="top">
-                <image style="display: block" height="45" width="45" width: alt="Plus Icon" src="data:image/png;base64, <%- files[2] %>"></image>
+                <% if (embedFiles) { %>
+                  <image height="26" width="24" src="data:image/png;base64, <%- files[2].base_64_string %>"></image>
+                <% } else { %>
+                  <image style="display: block" alt="Plus Icon" height="26" width="24" src="cid:<%- files[2].content_id %>"></image>
+                <% } %>
               </td>
             </tr>
           </table>
@@ -76,15 +88,15 @@ module.exports = {
   id: 'alert_template',
   markup,
   images: [{
-    file: 'dunami_logo_icon.png',
+    file_id: 'dunami_logo_icon.png',
     content_id: 'dunami_logo_icon'
   },
   {
-    file: 'alert_warning_icon.png',
+    file_id: 'alert_warning_icon.png',
     content_id: 'alert_warning_icon'
   },
   {
-    file: 'plus_icon.png',
+    file_id: 'plus_icon.png',
     content_id: 'plus_icon'
   }],
   charts: [{

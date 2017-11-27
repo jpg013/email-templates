@@ -4,18 +4,23 @@ const { promisify }       = require('util')
 const zlib                = require('zlib')
 
 const deflateAsync    = promisify(zlib.deflate)
+const inflateAsync    = promisify(zlib.inflate)
 const unlinkFileAsync = promisify(fs.unlink)
 
 const readFileStreamAsync = file => {
   return new Promise((resolve, reject) => {
-    let data = Buffer.from('')
-    let readStream = fs.createReadStream(file, {encoding: undefined})
+    try {
+      const readStream = fs.createReadStream(file, opts) // Buffer Stream
+      let bitmap = Buffer.from('')
 
-    readStream.on('data', chunk => {
-      data = Buffer.concat([data, chunk]);
-    })
-    readStream.on('end', () => resolve(data))
-    readStream.on('error', err => reject(err))
+      readStream.on('data', chunk => bitmap = Buffer.concat([bitmap, chunk]))
+      readStream.on('end', () => resolve(bitmap))
+      readStream.on('error', err => {
+        throw new Error(err)
+      })
+    } catch(e) {
+      reject(e)
+    }
   })
 }
 
@@ -33,10 +38,12 @@ const writeFileStreamAsync = (string, file) => {
 function connect(pathSettings) {
   const readStaticImg = img => readFileStreamAsync(path.resolve(pathSettings.staticImagesDir, img))
   const deflateFile = file => deflateAsync(file)
+  const inflateFile = file => inflateAsync(file)
 
   return {
     readStaticImg,
-    deflateFile
+    deflateFile,
+    inflateFile
   }
 }
 

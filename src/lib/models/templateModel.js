@@ -1,7 +1,8 @@
 const templateModel = joi => {
   const fileSchema = joi.object().keys({
-    file: joi.string(),
-    content_id: joi.string()
+    file_id: joi.string(),
+    content_id: joi.string(),
+    base_64_string: joi.string()
   });
 
   const schema = {
