@@ -1,12 +1,17 @@
+const jsdom           = require("jsdom");
+const d3              = require('d3')
 const buildDonutChart = require('./buildDonutChart')
 
+const { JSDOM } = jsdom;
+
 async function connect(container) {
-  async function buildD3Chart(id='', markup='', data={}) {
+
+  function buildD3Chart(id='', markup='', data={}) {
     const dom = new JSDOM(markup, { runScripts: "dangerously" })
 
     switch(id) {
       case 'donut_chart':
-        return await buildDonutChart(dom, d3, data)
+        return buildDonutChart(dom, d3, data)
       default:
         return
     }

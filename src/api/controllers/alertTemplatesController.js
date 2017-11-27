@@ -10,9 +10,9 @@ const connect = container => {
     throw new Error('missing required dependency')
   }
 
-  const { templateEngine, d3Charts, svgToPng } = services
+  const { templateEngine, d3Charts, svgToPng, fileConverter } = services
 
-  if (!templateEngine || !d3Charts || !svgToPng) {
+  if (!templateEngine || !d3Charts || !svgToPng || !fileConverter) {
     throw new Error('missing required dependency')
   }
 
@@ -44,28 +44,12 @@ const connect = container => {
       const { status, error } = getErrorResponse(req.error)
       res.status(status).send({error})
     } else {
-      const {results} = req
+      console.log(req.compiledTemplate.images)
+      console.log(req.compiledTemplate.charts)
+
+      const { results } = req
       res.status(httpStatus.OK).send(results)
     }
-  }
-
-  async function buildTemplateFile(tplFile) {
-    const cachedFile = tplFile.cacheKey ?
-      await cacheRepository.get(tplFile.cacheKey) :
-      undefined
-
-    if (cachedFile) {
-      return cachedFile
-    }
-
-    const svgFile = await svg.writeFileToSvg(tplFile)
-    const pngFileData = await svg.convertSvgToPng(svgFile, tplFile.opts)
-
-    if (tplFile.cacheKey) {
-      cacheRepository.set(tplFile.cacheKey, pngFileData)
-    }
-
-    return pngFileData
   }
 
   // ======================================================
@@ -104,15 +88,10 @@ const connect = container => {
 
   async function makeCompiledTemplate(templateId, req, res, next) {
     try {
-      let compiledTpl = await repository.get(templateId)
-
-      if (!req.compiledTemplate) {
-        compiledTpl = templateEngine.compileTemplate(templateId)
-      }
-      // Fire and forget cache
-      repository.set(templateId, compiledTpl)
-      req.compiledTemplate = compiledTpl
-
+      const cachedValue = await repository.get(templateId)
+      req.compiledTemplate = cachedValue ? cachedValue : compileTemplate(templateId)
+      // F&F cache
+      repository.set(templateId, req.compiledTemplate)
       next()
     } catch(e) {
       console.log(e)
@@ -123,19 +102,18 @@ const connect = container => {
   async function renderTemplateCharts(req, res, next) {
     const { templateDataModel, compiledTemplate } = req
 
-    req.results = Object.assign({}, {
-      ...req.compiledTemplate,
-    })
+    compiledTemplate.charts = await Promise.all(compiledTemplate.charts.map(async chart => {
+      const { id, dataProp, markup } = chart
+
+      const compiledSvgChart = buildD3Chart(id, markup, templateDataModel[dataProp])
+
+      const svgFile = await writeSvgToFile(compiledSvgChart)
+      const pngFile = await convertSvgToPng(fileConverter, svgFile)
+
+      return pngFile
+    }))
 
     next()
-
-    // await Promise.all(compiledTemplate.charts.map(async c => {
-      //const chartData =
-      //await writeSvgToFile()
-
-      //const { buildD3Chart } = d3Charts
-      //const { convertSvgToPng, writeSvgToFile } = svgToPng
-    // }))
   }
 
   // ======================================================

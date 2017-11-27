@@ -1,4 +1,7 @@
-const winston = require('winston')
+const winston  = require('winston')
+const path     = require('path')
+const fs       = require('fs')
+const uuidV4   = require('uuid/v4')
 
 async function connect(container) {
   const { pathSettings } = container
@@ -21,19 +24,19 @@ async function connect(container) {
   }
 
   async function convertSvgToPng(fileConverter, svgFile, opts={}) {
-    const timestamp = new Date().getTime()
-    const pngFile = makeTmpFilePath(`svg_to_png_${timestamp}.png`)
+    const uuid = uuidV4()
+    const pngFile = makeTmpFilePath(`${uuid}.png`)
 
     let process
 
     try {
-      process = await fileConverterRepository.startProcess(
-        await fileConverterRepository.createProcess(),
+      process = await fileConverter.startProcess(
+        await fileConverter.createProcess(),
         svgFile,
         opts
       )
 
-      await fileConverterRepository.downloadFile(process, pngFile)
+      await fileConverter.downloadFile(process, pngFile)
     } catch(e) {
       winston.log('error', e)
     } finally {
@@ -42,14 +45,12 @@ async function connect(container) {
       }
     }
 
-    const base64Str = await encodeFileBase64(pngFile)
-
     return pngFile
   }
 
-  async function writeSvgToFile(id, svg) {
-    const timestamp = new Date().getTime()
-    const file = makeTmpFilePath(`${id}_${timestamp}.svg`)
+  async function writeSvgToFile(svg) {
+    const uuid = uuidV4()
+    const file = makeTmpFilePath(`${uuid}.svg`)
 
     await writeToFile(svg, file)
     return file

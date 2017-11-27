@@ -66,7 +66,7 @@ jspm_packages
 *.vscode
 
 #Temp files
-tmp_files
+tmp
 
 
 # End of https://www.gitignore.io/api/node
