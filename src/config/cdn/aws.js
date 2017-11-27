@@ -1,8 +1,6 @@
 var AWS  = require('aws-sdk');
 
 function connect({base_url, bucket_name, region}) {
-  console.log(region)
-
   AWS.config.update({region});
   const s3 = new AWS.S3();
 
@@ -33,8 +31,9 @@ function connect({base_url, bucket_name, region}) {
     return new Promise((resolve, reject) => {
       s3.putObject(args, (err, resp) => {
         if (err) {
-          return re
+          return reject(err)
         }
+        resolve(resp)
       })
     })
   }

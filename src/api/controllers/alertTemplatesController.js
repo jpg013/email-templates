@@ -5,7 +5,7 @@ const sgMail     = require('@sendgrid/mail')
 sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
 const ALERT_TEMPLATE_ID = 'alert_template'
-const DEFAULT_IMAGE_SOURCE = 'embedded_base_64' // TODO: default this to embedded_attachment for production
+const DEFAULT_IMAGE_SOURCE = 'link' // TODO: default this to embedded_attachment for production
 
 const connect = container => {
   const { services, repository, pathSettings, models, fileHelpers } = container
@@ -54,27 +54,26 @@ const connect = container => {
   async function validateRequest(req, res, next) {
     const data = req.method === 'GET' ? req.query : req.body
 
+    // Hack for 'GET' query params, convert strings to array
     if (typeof data.alert_types !== 'object') {
       data.alert_types = data.alert_types.split(',')
     }
 
-    try {
-      req.templateDataModel = await models.validate(data, 'alertTemplateRequest')
-      next()
-    } catch(err) {
+    // Build the template data model and the compiled template
 
+    try {
+      req.templateData = await models.validate(data, 'alertTemplateRequest')
+    } catch(err) {
       return res.status(httpStatus.BAD_REQUEST).send({err: err})
     }
-  }
 
-  async function makeCompiledTemplate(req, res, next) {
     try {
       req.compiledTemplate = compileTemplate(ALERT_TEMPLATE_ID)
-      next()
-    } catch(e) {
-      console.log(e)
-      // TODO: handle error
+    } catch(err) {
+      return res.status(httpStatus.BAD_REQUEST).send({err: err})
     }
+
+    next()
   }
 
   function renderTemplateChart(fileId, markup, data) {
@@ -84,33 +83,47 @@ const connect = container => {
       .then(svgFile => convertSvgToPng(fileId, svgFile, fileConverter))
   }
 
-  function loadTemplateImages(images) {
-    images.forEach(({file_id}) => {
-      // cdn.retrieveObjectMetaData(file_id)
-      return repository.exists(file_id)
-        .then(val => {
-          if (val) {
-            return
-          }
+  async function asyncLoadTemplateImage(fileId) {
+    const metaData = await cdn.retrieveObjectMetaData(fileId)
 
-          fileHelpers.readStaticImg(file_id)
-            .then(fileHelpers.deflateFile)
-            .then(zippedValue => repository.set(file_id, zippedValue.toString('base64')))
+    // Object exists?
+    if (metaData) {
+      return
+    }
+
+    await cdn.putPublicObject(fileId, await fileHelpers.readStaticImg(fileId))
+  }
+
+  function mapTemplateImages(arr) {
+    return arr.map(cur => {
+      const imageFile = Object.assign({}, cur, {
+        url_link: cdn.makeObjectLink(cur.file_id)
       })
+
+      // async fire and forget
+      asyncLoadTemplateImage(cur.file_id)
+
+      return imageFile
     })
   }
 
-  async function compileTemplateFiles(req, res, next) {
-    const { templateDataModel, compiledTemplate } = req
+  // Compile the template static images and d3 charts
+  async function makeTemplateFiles(req, res, next) {
+    const { templateData, compiledTemplate } = req
     const { images, charts } = compiledTemplate
 
     // Lazy load images
-    loadTemplateImages(images.slice())
+    const filePromises = mapTemplateImages(images.slice())
 
-    const files = images.slice().map(cur => Object.assign({}, cur, { url_link: cdn.makeObjectLink(cur.file_id)}))
+    /*
+    const imgPromises = images.slice().map(cur => {
+      return Object.assign({}, cur, {
+        url_link: cdn.makeObjectLink(cur.file_id)
+      })
+    })
+    */
 
-    req.templateFiles = await Promise.all(files)
-
+    req.templateFiles = await Promise.all(filePromises)
     next()
 
     //compiledTemplate.charts = await Promise.all(compiledTemplate.charts.map(async chart => {
@@ -122,8 +135,9 @@ const connect = container => {
     //next()
   }
 
+  /*
   function mapFilesToBase64(req, res, next) {
-    const { compiledTemplate, templateDataModel, templateFiles: files } = req
+    const { compiledTemplate, templateData, templateFiles: files } = req
 
     const promiseArr = files.map(file => {
       return repository.get(file.file_id)
@@ -138,24 +152,25 @@ const connect = container => {
       next()
     })
   }
+  */
 
-  async function makeTemplateModel(req, res, next) {
-    const { compiledTemplate, templateDataModel, templateFiles: files } = req
+  async function renderTemplate(req, res, next) {
+    const { compiledTemplate, templateData, templateFiles: files } = req
     const image_source = req.query.image_source || DEFAULT_IMAGE_SOURCE
 
     try {
       const renderArgs = {
-        ...templateDataModel,
+        ...templateData,
         files,
         image_source
       }
 
-      const templateModelData = {
+      const templateObj = {
         html: compiledTemplate.render(renderArgs),
         files
       }
 
-      req.results = await models.validate(templateModelData, 'template')
+      req.results = await models.validate(templateObj, 'template')
       next()
     } catch(err) {
       // TODO: handle error
@@ -163,7 +178,7 @@ const connect = container => {
     }
   }
 
-  function sendTemplateHtml(req, res, next) {
+  function serveTemplateHTML(req, res, next) {
     sendEmail(req.results.html)
     res.set('Content-Type', 'text/html')
     res.send(Buffer.from(req.results.html))
@@ -172,8 +187,8 @@ const connect = container => {
   // ======================================================
   // Controller Routes
   // ======================================================
-  controller.post('/', validateRequest, makeCompiledTemplate, compileTemplateFiles, makeTemplateModel, handleResponse)
-  controller.get('/', validateRequest, makeCompiledTemplate, compileTemplateFiles, mapFilesToBase64, makeTemplateModel, sendTemplateHtml)
+  controller.post('/', validateRequest, makeTemplateFiles, renderTemplate, handleResponse)
+  controller.get('/', validateRequest, makeTemplateFiles, renderTemplate, serveTemplateHTML)
 
   return controller
 }

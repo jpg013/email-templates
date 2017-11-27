@@ -5,19 +5,22 @@ async function connect(container) {
     return new Error('missing required dependency')
   }
 
-  async function retrieveObjectMetaData(key) {
-    try {
-      const metaData = await cdn.headObject(key)
-    } catch(e) {
-      console.log(e)
-    }
-  }
-
+  const retrieveObjectMetaData = key => cdn.headObject(key)
   const makeObjectLink = key => cdn.makeObjectLink(key)
+
+  function putPublicObject(key, objectData, opts={}) {
+    const args = {
+      ...opts,
+      ACL: 'public-read'
+    }
+
+    return cdn.putObject(key, objectData, args)
+  }
 
   return {
     retrieveObjectMetaData,
-    makeObjectLink
+    makeObjectLink,
+    putPublicObject
   }
 }
 

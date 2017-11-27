@@ -1,7 +1,7 @@
 const fs = require('fs')
 
 async function connect(container) {
-  const { fileConverter} = container
+  const { fileConverter } = container
 
   if (!fileConverter) {
     throw new Error('missing required dependencies')

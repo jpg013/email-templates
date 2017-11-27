@@ -7,7 +7,7 @@ const deflateAsync    = promisify(zlib.deflate)
 const inflateAsync    = promisify(zlib.inflate)
 const unlinkFileAsync = promisify(fs.unlink)
 
-const readFileStreamAsync = file => {
+const readFileStreamAsync = (file, opts={}) => {
   return new Promise((resolve, reject) => {
     try {
       const readStream = fs.createReadStream(file, opts) // Buffer Stream
