@@ -11,18 +11,22 @@ const markup = `
     <table align="center" border="1" cellpadding="0" cellspacing="0" width="800" style="border-collapse: collapse;">
       <tr bgcolor="#EAEAEB" height="60">
         <td width="430" height="60" style="padding-left: 10px">
-          <% if (embedFiles) { %>
-            <image style="display: block" height="60" width="135" width: alt="Dunami Logo" src="data:image/png;base64, <%- files[0].base_64_string %>"></image>
-          <% } else { %>
-            <image style="display: block" height="60" width="135" width: alt="Dunami Logo" src="cid:<%- files[0].content_id %>"></image>
+          <% if (image_source === 'embedded_base_64') { %>
+            <img style="display: block; margin-top: -5px;" height="60" width="135" width: alt="Dunami Logo" src="data:image/png;base64, <%- files[0].base_64_string %>"></img>
+          <% } else if (image_source === 'embedded_attachment') { %>
+            <img style="display: block; margin-top: -5px;" height="60" width="135" width: alt="Dunami Logo" src="cid:<%- files[0].content_id %>"></img>
+          <% } else if (image_source === 'link') { %>
+            <img style="display: block; margin-top: -5px;" height="60" width="135" width: alt="Dunami Logo" src="<%- files[0].url_link %>"></img>
           <% } %>
         </td>
 
         <td width="40" height="60" align="right">
-          <% if (embedFiles) { %>
-            <image height="26" width="24" src="data:image/png;base64, <%- files[1].base_64_string %>"></image>
-          <% } else { %>
-            <image height="26" width="24" src="cid:<%- files[1].content_id %>"></image>
+          <% if (image_source === 'embedded_base_64') { %>
+            <img style="display: block;" height="26" width="24" src="data:image/png;base64, <%- files[1].base_64_string %>"></img>
+          <% } else if (image_source === 'embedded_attachment') { %>
+            <img style="display: block;" height="26" width="24" src="cid:<%- files[1].content_id %>"></img>
+          <% } else if (image_source === 'link') { %>
+            <img style="display: block;" height="26" width="24" width: alt="Alert" src="<%- files[1].url_link %>"></img>
           <% } %>
         </td>
 
@@ -54,13 +58,15 @@ const markup = `
               </td>
             </tr>
 
-            <tr height="60" bgcolor="pink">
+            <tr height="60" bgcolor="">
 
               <td valign="top">
-                <% if (embedFiles) { %>
-                  <image height="26" width="24" src="data:image/png;base64, <%- files[2].base_64_string %>"></image>
-                <% } else { %>
-                  <image style="display: block" alt="Plus Icon" height="26" width="24" src="cid:<%- files[2].content_id %>"></image>
+                <% if (image_source === 'embedded_base_64') { %>
+                  <img style="display: block;" height="26" width="24" src="data:image/png;base64, <%- files[2].base_64_string %>"></img>
+                <% } else if (image_source === 'embedded_attachment'){ %>
+                  <img style="display: block;" style="display: block" alt="Plus Icon" height="26" width="24" src="cid:<%- files[2].content_id %>"></img>
+                <% } else if (image_source === 'link') { %>
+                  <img style="display: block" alt="Plus Icon" height="26" width="24" src="<%- files[2].url_link %>"></img>
                 <% } %>
               </td>
             </tr>
@@ -81,7 +87,7 @@ const markup = `
       </tr>
     </table>
   </body>
-</html
+</html>
 `
 
 module.exports = {
@@ -89,15 +95,18 @@ module.exports = {
   markup,
   images: [{
     file_id: 'dunami_logo_icon.png',
-    content_id: 'dunami_logo_icon'
+    content_id: 'dunami_logo_icon',
+    url_link: ''
   },
   {
     file_id: 'alert_warning_icon.png',
-    content_id: 'alert_warning_icon'
+    content_id: 'alert_warning_icon',
+    url_link: ''
   },
   {
     file_id: 'plus_icon.png',
-    content_id: 'plus_icon'
+    content_id: 'plus_icon',
+    url_link: ''
   }],
   charts: [{
     id: 'donut_chart',

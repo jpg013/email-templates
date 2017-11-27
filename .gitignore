@@ -68,5 +68,8 @@ jspm_packages
 #Temp files
 tmp
 
+#ENV
+.env
+
 
 # End of https://www.gitignore.io/api/node

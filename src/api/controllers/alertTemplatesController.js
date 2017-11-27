@@ -1,8 +1,11 @@
 //http://localhost:3000/templates/alerts?alert_types=volume&analysis_name=KBHERSH&analysis_link=https%3A%2F%2Fappdev.dunami.com%2F%23%2Fchannel%2F1169%2Fanalysis%2F13504&folder_name=KC%20Devs&folder_link=https%3A%2F%2Fappdev.dunami.com%2F%23%2Fchannel%2F1169&stream_start_date=2017-10-26T17%3A03%3A49.069Z&stream_end_date=2017-12-26T17%3A03%3A49.069Z&stream_refresh_period=daily&new_post_count=234
 const express    = require('express')
 const httpStatus = require('http-status-codes')
+const sgMail     = require('@sendgrid/mail')
+sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
 const ALERT_TEMPLATE_ID = 'alert_template'
+const DEFAULT_IMAGE_SOURCE = 'embedded_base_64' // TODO: default this to embedded_attachment for production
 
 const connect = container => {
   const { services, repository, pathSettings, models, fileHelpers } = container
@@ -11,9 +14,9 @@ const connect = container => {
     throw new Error('missing required dependency')
   }
 
-  const { templateEngine, d3Charts, svgToPng, fileConverter } = services
+  const { templateEngine, d3Charts, svgToPng, fileConverter, cdn } = services
 
-  if (!templateEngine || !d3Charts || !svgToPng || !fileConverter) {
+  if (!templateEngine || !d3Charts || !svgToPng || !fileConverter || !cdn) {
     throw new Error('missing required dependency')
   }
 
@@ -38,25 +41,14 @@ const connect = container => {
   // ======================================================
   // Controller Methods
   // ======================================================
-  async function handlePostAlerts(req, res, next) {
-    try {
-      const templateId = 'alerts'
-
-      const compiledTpl = templateEngine.compileTemplate(templateId)
-      const files = await Promise.all(compiledTpl.files.map(f => cacheRepository.get(f)))
-
-      const renderArgs = {
-        ...alertTemplateData,
-        files
-      }
-
-      req.results = templateEngine.renderTemplate(compiledTpl.compiledMarkup, renderArgs)
-    } catch(e) {
-      console.log(e)
-      req.error = e
-    } finally {
-      next()
-    }
+  function sendEmail(html) {
+    const msg = {
+      to: 'dunami.test@yahoo.com',
+      from: 'justin.graber@pathar.net',
+      subject: 'Email Template Test',
+      html
+    };
+    sgMail.send(msg);
   }
 
   async function validateRequest(req, res, next) {
@@ -75,12 +67,9 @@ const connect = container => {
     }
   }
 
-  async function makeCompiledTemplate(templateId, req, res, next) {
+  async function makeCompiledTemplate(req, res, next) {
     try {
-      const cachedValue = await repository.get(templateId)
-      req.compiledTemplate = cachedValue ? cachedValue : compileTemplate(templateId)
-      // F&F cache
-      //repository.set(templateId, req.compiledTemplate)
+      req.compiledTemplate = compileTemplate(ALERT_TEMPLATE_ID)
       next()
     } catch(e) {
       console.log(e)
@@ -95,8 +84,9 @@ const connect = container => {
       .then(svgFile => convertSvgToPng(fileId, svgFile, fileConverter))
   }
 
-  function loadImagesIntoCache(images) {
+  function loadTemplateImages(images) {
     images.forEach(({file_id}) => {
+      // cdn.retrieveObjectMetaData(file_id)
       return repository.exists(file_id)
         .then(val => {
           if (val) {
@@ -114,10 +104,10 @@ const connect = container => {
     const { templateDataModel, compiledTemplate } = req
     const { images, charts } = compiledTemplate
 
-    // Lazy load images into cache
-    loadImagesIntoCache(images.slice())
+    // Lazy load images
+    loadTemplateImages(images.slice())
 
-    const files = images.slice()
+    const files = images.slice().map(cur => Object.assign({}, cur, { url_link: cdn.makeObjectLink(cur.file_id)}))
 
     req.templateFiles = await Promise.all(files)
 
@@ -151,12 +141,13 @@ const connect = container => {
 
   async function makeTemplateModel(req, res, next) {
     const { compiledTemplate, templateDataModel, templateFiles: files } = req
+    const image_source = req.query.image_source || DEFAULT_IMAGE_SOURCE
 
     try {
       const renderArgs = {
         ...templateDataModel,
         files,
-        embedFiles: req.method === 'GET'
+        image_source
       }
 
       const templateModelData = {
@@ -173,16 +164,16 @@ const connect = container => {
   }
 
   function sendTemplateHtml(req, res, next) {
-    res.set('Content-Type', 'text/html');
-    console.log(req.results.html)
+    sendEmail(req.results.html)
+    res.set('Content-Type', 'text/html')
     res.send(Buffer.from(req.results.html))
   }
 
   // ======================================================
   // Controller Routes
   // ======================================================
-  controller.post('/', validateRequest, makeCompiledTemplate.bind(null, ALERT_TEMPLATE_ID), compileTemplateFiles, makeTemplateModel, handleResponse)
-  controller.get('/', validateRequest, makeCompiledTemplate.bind(null, ALERT_TEMPLATE_ID), compileTemplateFiles, mapFilesToBase64, makeTemplateModel, sendTemplateHtml)
+  controller.post('/', validateRequest, makeCompiledTemplate, compileTemplateFiles, makeTemplateModel, handleResponse)
+  controller.get('/', validateRequest, makeCompiledTemplate, compileTemplateFiles, mapFilesToBase64, makeTemplateModel, sendTemplateHtml)
 
   return controller
 }

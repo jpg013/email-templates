@@ -1,33 +1,35 @@
 function initDI ({
   serverSettings,
   pathSettings,
-  cacheSettings,
+  redisSettings,
   cache,
-  fileConverterSettings,
+  cloudConvertSettings,
   fileConverter,
   fileHelpers,
-  models
+  awsSettings,
+  models,
+  cdn
 }, mediator) {
 
   mediator.once('init', () => {
     mediator.on('cache.ready', cache => {
       // POJO container for DI
-      const container = Object.create({})
+      const container = {}
 
       container.serverSettings = Object.assign({}, serverSettings)
-      container.pathSettings = Object.assign({}, pathSettings)
-      container.fileConverterSettings = Object.assign({}, fileConverterSettings)
-      container.cache = cache
-      container.fileConverter = fileConverter.connect(fileConverterSettings)
-      container.models = Object.assign({}, models)
-      container.fileHelpers = fileHelpers.connect(pathSettings)
+      container.pathSettings   = Object.assign({}, pathSettings)
+      container.cache          = cache
+      container.fileConverter  = fileConverter.connect(cloudConvertSettings)
+      container.models         = Object.assign({}, models)
+      container.fileHelpers    = fileHelpers.connect(pathSettings)
+      container.cdn            = cdn.connect(awsSettings)
 
       mediator.emit('di.ready', container)
     })
 
     mediator.on('cache.error', err => mediator.emit('di.error', err))
 
-    cache.connect(cacheSettings, mediator)
+    cache.connect(redisSettings, mediator)
 
     mediator.emit('boot.ready')
 

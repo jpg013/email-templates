@@ -1,23 +1,28 @@
 const {
   serverSettings,
-  cacheSettings,
+  redisSettings,
   pathSettings,
-  fileConverterSettings
+  cloudConvertSettings,
+  awsSettings
 }                   = require('./config')
+
 const di            = require('./di')
 const cache         = require('./cache')
+const cdn           = require('./cdn')
 const fileConverter = require('./fileConverter')
 const models        = require('../lib/models')
 const fileHelpers   = require('../bin/fileHelpers')
 
 const bindArgs = {
   serverSettings,
-  cacheSettings,
+  redisSettings,
   pathSettings,
   fileHelpers,
   cache,
-  fileConverterSettings,
+  cloudConvertSettings,
   fileConverter,
+  awsSettings,
+  cdn,
   models
 }
 
