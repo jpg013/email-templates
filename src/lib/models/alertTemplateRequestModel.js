@@ -10,13 +10,15 @@ const alertTemplateRequestModel = joi => {
     stream_refresh_period: joi.string().required(),
     new_post_count: joi.number().required(),
     sentiment: joi.array(),
+    image_source: joi.string().allow('embedded_base_64', 'embedded_attachment', 'link').default('link'),
     __type: joi.string().default('alert', 'type of model')
   }
 
   const validate = object => {
     const {
       alert_types, analysis_name, analysis_link, folder_name, folder_link,
-      stream_start_date, stream_end_date, stream_refresh_period, new_post_count
+      stream_start_date, stream_end_date, stream_refresh_period, new_post_count,
+      image_source
     } = object;
 
     const sentiment = [
@@ -44,7 +46,8 @@ const alertTemplateRequestModel = joi => {
       stream_end_date,
       stream_refresh_period,
       new_post_count,
-      sentiment
+      sentiment,
+      image_source
     }
 
     return joi.validate(schemaData, schema)

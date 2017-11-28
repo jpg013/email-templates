@@ -1,6 +1,6 @@
-const express                  = require('express')
-const alertTemplatesController = require('./controllers/alertTemplatesController')
-const templateFilesController  = require('./controllers/templateFilesController')
+const express         = require('express')
+const alertController = require('./controllers/alertController')
+const fileController  = require('./controllers/fileController')
 
 const config = (api, container) => {
   const templateRouter = express.Router()
@@ -9,14 +9,14 @@ const config = (api, container) => {
   // ======================================================
   // Mount the controllers to base route
   // ======================================================
-  templateRouter.use('/alerts', alertTemplatesController.connect(container))
-  fileRouter.use('/', templateFilesController.connect(container))
+  templateRouter.use('/alerts', alertController.connect(container))
+  fileRouter.use('/', fileController.connect(container))
 
   // ======================================================
   // Mount the router to the app and return app
   // ======================================================
   api.use('/templates', templateRouter)
-  api.use('/template_files', fileRouter)
+  api.use('/files', fileRouter)
 
   return api
 };

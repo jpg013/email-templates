@@ -2,10 +2,10 @@
 const express    = require('express')
 const httpStatus = require('http-status-codes')
 const sgMail     = require('@sendgrid/mail')
+
 sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
 const ALERT_TEMPLATE_ID = 'alert_template'
-const DEFAULT_IMAGE_SOURCE = 'link' // TODO: default this to embedded_attachment for production
 
 const connect = container => {
   const { services, repository, pathSettings, models, fileHelpers } = container
@@ -59,20 +59,18 @@ const connect = container => {
       data.alert_types = data.alert_types.split(',')
     }
 
-    // Build the template data model and the compiled template
-
+    // Build the template data model
     try {
       req.templateData = await models.validate(data, 'alertTemplateRequest')
     } catch(err) {
       return res.status(httpStatus.BAD_REQUEST).send({err: err})
     }
-
+    // Build the compiled template
     try {
       req.compiledTemplate = compileTemplate(ALERT_TEMPLATE_ID)
     } catch(err) {
       return res.status(httpStatus.BAD_REQUEST).send({err: err})
     }
-
     next()
   }
 
@@ -83,7 +81,7 @@ const connect = container => {
       .then(svgFile => convertSvgToPng(fileId, svgFile, fileConverter))
   }
 
-  async function asyncLoadTemplateImage(fileId) {
+  async function uploadImageToCloud(fileId) {
     const metaData = await cdn.retrieveObjectMetaData(fileId)
 
     // Object exists?
@@ -94,14 +92,32 @@ const connect = container => {
     await cdn.putPublicObject(fileId, await fileHelpers.readStaticImg(fileId))
   }
 
-  function mapTemplateImages(arr) {
-    return arr.map(cur => {
+  async function uploadImageToCache(fileId) {
+    const fileExists = await repository.exists(fileId)
+
+    // File exists
+    if (fileExists) {
+      return
+    }
+
+    const bitmap = await fileHelpers.readStaticImg(fileId)
+    const zippedValue = await fileHelpers.deflateFile(bitmap)
+
+    repository.set(fileId, zippedValue.toString('base64'))
+  }
+
+  function makeTemplateImages(imageArr, imageSource) {
+    return imageArr.map(cur => {
       const imageFile = Object.assign({}, cur, {
         url_link: cdn.makeObjectLink(cur.file_id)
       })
 
       // async fire and forget
-      asyncLoadTemplateImage(cur.file_id)
+      if (imageSource === 'link') {
+        uploadImageToCloud(cur.file_id)
+      } else {
+        uploadImageToCache(cur.file_id)
+      }
 
       return imageFile
     })
@@ -113,15 +129,7 @@ const connect = container => {
     const { images, charts } = compiledTemplate
 
     // Lazy load images
-    const filePromises = mapTemplateImages(images.slice())
-
-    /*
-    const imgPromises = images.slice().map(cur => {
-      return Object.assign({}, cur, {
-        url_link: cdn.makeObjectLink(cur.file_id)
-      })
-    })
-    */
+    const filePromises = makeTemplateImages(images.slice(), templateData.image_source)
 
     req.templateFiles = await Promise.all(filePromises)
     next()
@@ -135,34 +143,13 @@ const connect = container => {
     //next()
   }
 
-  /*
-  function mapFilesToBase64(req, res, next) {
-    const { compiledTemplate, templateData, templateFiles: files } = req
-
-    const promiseArr = files.map(file => {
-      return repository.get(file.file_id)
-        .then(zippedValue => fileHelpers.inflateFile(Buffer.from(zippedValue, 'base64')))
-        .then(bitmap => {
-          return Object.assign({}, file, { base_64_string: bitmap.toString('base64')})
-        })
-    })
-
-    return Promise.all(promiseArr).then(resp => {
-      req.templateFiles = resp.slice()
-      next()
-    })
-  }
-  */
-
   async function renderTemplate(req, res, next) {
     const { compiledTemplate, templateData, templateFiles: files } = req
-    const image_source = req.query.image_source || DEFAULT_IMAGE_SOURCE
 
     try {
       const renderArgs = {
         ...templateData,
-        files,
-        image_source
+        files
       }
 
       const templateObj = {
@@ -179,7 +166,7 @@ const connect = container => {
   }
 
   function serveTemplateHTML(req, res, next) {
-    sendEmail(req.results.html)
+    // sendEmail(req.results.html)
     res.set('Content-Type', 'text/html')
     res.send(Buffer.from(req.results.html))
   }
