@@ -75,36 +75,6 @@ const connect = container => {
     next()
   }
 
-  async function uploadFileToCloud(fileId, isStatic) {
-    const metaData = await cdn.retrieveObjectMetaData(fileId)
-
-    // Object exists?
-    if (metaData) {
-      return
-    }
-
-    try {
-      const fileBitmap = isStatic ? await fileHelpers.readStaticFile(fileId) : await fileHelpers.readTmpFile(fileId)
-      await cdn.putPublicObject(fileId, fileBitmap)
-    } catch(e) {
-      winston.log('error', e)
-    }
-  }
-
-  async function uploadFileToCache(fileId, isStatic) {
-    const fileExists = await repository.exists(fileId)
-
-    // File exists
-    if (fileExists) {
-      return
-    }
-
-    const fileBitmap = isStatic ? await fileHelpers.readStaticFile(fileId) : await fileHelpers.readTmpFile(fileId)
-    const zippedValue = await fileHelpers.deflateFile(fileBitmap)
-
-    repository.set(fileId, zippedValue.toString('base64'))
-  }
-
   function buildTemplateCharts(chartArr, templateData) {
     return chartArr.map(async cur => {
       const contentId = fileHelpers.generateUniqueFileName(cur.chartName)
@@ -114,7 +84,8 @@ const connect = container => {
       const fileData = {
         file_id: pngFileId,
         content_id: contentId,
-        url_link: (templateData.image_source === 'link') ? cdn.makeObjectLink(pngFileId) : undefined
+        url_link: (templateData.image_source === 'link') ? cdn.makeObjectLink(pngFileId) : undefined,
+        type: 'attachment'
       }
 
       const chartSvg = buildD3Chart(cur.chartName, cur.markup, templateData[cur.dataProp])
@@ -122,12 +93,10 @@ const connect = container => {
       await fileHelpers.writeFileStreamAsync(chartSvg, fileHelpers.makeTmpFilePath(svgFileId))
       await convertSvgToPng(svgFileId, pngFileId, fileConverter, cur.opts)
 
-      // async fire and forget
-      if (templateData.image_source === 'link') {
-        uploadFileToCloud(pngFileId, false)
-      } else {
-        uploadFileToCache(pngFileId)
-      }
+      const bitmap = await fileHelpers.readTmpFile(pngFileId)
+      const zippedValue = await fileHelpers.deflateFile(bitmap)
+
+      await repository.set(pngFileId, zippedValue.toString('base64'))
 
       return fileData
     })
@@ -136,22 +105,20 @@ const connect = container => {
   function buildTemplateImages(imageArr, templateData) {
     return imageArr.map(cur => {
       const fileData = Object.assign({}, cur, {
-        url_link: (templateData.image_source === 'link') ? cdn.makeObjectLink(cur.file_id) : undefined
+        url_link: cdn.makeObjectLink(cur.file_id),
+        type: 'url_link'
       })
 
       // async fire and forget
-      if (templateData.image_source === 'link') {
-        uploadFileToCloud(fileData.file_id, true)
-      } else {
-        uploadFileToCache(fileData.file_id)
-      }
+      const fileBitmap = fileHelpers.makeTmpFilePath(fileData.file_id)
+      cdn.putObject(fileData.file_id, fileBitmap, { upsert: false })
 
       return fileData
     })
   }
 
   // Compile the template static images and d3 charts
-  async function makeTemplateFiles(req, res, next) {
+  async function compileTemplateFiles(req, res, next) {
     const { templateData, compiledTemplate } = req
     const { images, charts } = compiledTemplate
 
@@ -195,8 +162,8 @@ const connect = container => {
   // ======================================================
   // Controller Routes
   // ======================================================
-  controller.post('/', validateRequest, makeTemplateFiles, renderTemplate, handleResponse)
-  controller.get('/', validateRequest, makeTemplateFiles, renderTemplate, serveTemplateHTML)
+  controller.post('/', validateRequest, compileTemplateFiles, renderTemplate, handleResponse)
+  controller.get('/', validateRequest, compileTemplateFiles, renderTemplate, serveTemplateHTML)
 
   return controller
 }

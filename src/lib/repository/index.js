@@ -1,18 +1,21 @@
 async function connect(container) {
   const { cache } = container
 
-  if (!cache) {
+  if (!cache ) {
     throw new Error('missing required cache dependency')
   }
 
-  function set(key, val) {
-    const result = cache.set(key, JSON.stringify(val))
-    return result
+  async function set(key, val, opts={}) {
+    if (!opts.upsert && await exists(key)) {
+      return
+    }
+
+    return await cache.set(key, val)
   }
 
   function get(key) {
     return new Promise((resolve, reject) => {
-      cache.get(key, (err, val) => err ? reject(err) : resolve(JSON.parse(val)))
+      cache.get(key, (err, val) => err ? reject(err) : resolve(val))
     })
   }
 
@@ -24,8 +27,7 @@ async function connect(container) {
 
   return {
     get,
-    set,
-    exists
+    set
   }
 }
 

@@ -51,7 +51,7 @@ function connect(pathSettings) {
     inflateFile,
     writeFileStreamAsync,
     makeTmpFilePath,
-    generateUniqueFileName
+    generateUniqueFileName,
   }
 }
 

@@ -1,15 +1,14 @@
 const templateModel = joi => {
   const fileSchema = joi.object().keys({
-    file_id: joi.string(),
-    content_id: joi.string(),
-    base_64_string: joi.string(),
-    url_link: joi.string()
+    file_id: joi.string().required(),
+    content_id: joi.string().required(),
+    url_link: joi.string(),
+    type: joi.string().allow('url_link', 'attachment')
   });
 
   const schema = {
     html: joi.string(),
-    files: joi.array().items(fileSchema),
-    __type: joi.string().default('alert_template_request', 'type of model')
+    files: joi.array().items(fileSchema)
   }
 
   const validate = object => {

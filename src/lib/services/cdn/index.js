@@ -8,19 +8,24 @@ async function connect(container) {
   const retrieveObjectMetaData = key => cdn.headObject(key)
   const makeObjectLink = key => cdn.makeObjectLink(key)
 
-  function putPublicObject(key, objectData, opts={}) {
-    const args = {
-      ...opts,
-      ACL: 'public-read'
+  async function putObject(fileId, object, opts={}) {
+    // Object exists?
+    if (!opts.upsert && await retrieveObjectMetaData(fileId)) {
+      return
     }
 
-    return cdn.putObject(key, objectData, args)
+    try {
+      const args = { ACL: 'public-read' }
+
+      return await cdn.putObject(fileId, object, args)
+    } catch(e) {
+      console.log('error', e)
+    }
   }
 
   return {
-    retrieveObjectMetaData,
     makeObjectLink,
-    putPublicObject
+    putObject
   }
 }
 

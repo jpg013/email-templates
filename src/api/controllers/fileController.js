@@ -14,7 +14,7 @@ const connect = container => {
     const { fileId } = req.params
 
     const zippedValue = await repository.get(fileId)
-
+    
     if (!zippedValue) {
       return res.status(httpStatus.NOT_FOUND).send()
     }

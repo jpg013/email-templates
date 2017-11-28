@@ -10,8 +10,7 @@ const alertTemplateRequestModel = joi => {
     stream_refresh_period: joi.string().required(),
     new_post_count: joi.number().required(),
     sentiment: joi.array(),
-    image_source: joi.string().allow('embedded_base_64', 'embedded_attachment', 'link').default('link'),
-    __type: joi.string().default('alert', 'type of model')
+    image_source: joi.string().allow('embedded_base_64', 'embedded_attachment', 'link').default('link')
   }
 
   const validate = object => {
