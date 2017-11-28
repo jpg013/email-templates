@@ -2,6 +2,7 @@ const fs                  = require('fs')
 const path                = require('path')
 const { promisify }       = require('util')
 const zlib                = require('zlib')
+const uuidV4              = require('uuid/v4')
 
 const deflateAsync    = promisify(zlib.deflate)
 const inflateAsync    = promisify(zlib.inflate)
@@ -36,26 +37,22 @@ const writeFileStreamAsync = (string, file) => {
 }
 
 function connect(pathSettings) {
-  const readStaticImg = img => readFileStreamAsync(path.resolve(pathSettings.staticImagesDir, img))
+  const readStaticFile = fileId => readFileStreamAsync(path.resolve(pathSettings.staticFileDir, fileId))
+  const readTmpFile = fileId => readFileStreamAsync(path.resolve(pathSettings.tmpFileDir, fileId))
   const deflateFile = file => deflateAsync(file)
   const inflateFile = file => inflateAsync(file)
+  const makeTmpFilePath = f => path.resolve(pathSettings.tmpFileDir, f)
+  const generateUniqueFileName = id => `${id}_${uuidV4()}`
 
   return {
-    readStaticImg,
+    readStaticFile,
+    readTmpFile,
     deflateFile,
-    inflateFile
+    inflateFile,
+    writeFileStreamAsync,
+    makeTmpFilePath,
+    generateUniqueFileName
   }
 }
 
 module.exports = Object.create({connect})
-
-/*
-module.exports = {
-  readFileAsync,
-  writeToFile,
-  unlinkFileAsync,
-  createWriteStream,
-  createReadStream,
-  readFileStreamAsync
-}
-*/

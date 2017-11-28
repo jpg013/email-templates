@@ -23,12 +23,10 @@ async function connect(container) {
     })
   }
 
-  async function waitForProcessToFinish(process) {
+  function waitForProcessToFinish(process) {
     return new Promise((resolve, reject) => {
-      console.log('waiting for process to finish')
       process.refresh()
       process.wait((err, updatedProcess) => {
-        console.log('process has finished')
         if (err) {
           process.delete();
           return reject(err)
@@ -40,17 +38,16 @@ async function connect(container) {
 
   async function startProcess(process, file, opts={}) {
     return new Promise((resolve, reject) => {
-      async function callback(err, process) {
+      function callback(err, process) {
         if (err) {
           process.delete()
           return reject(err)
         }
 
-        resolve(await waitForProcessToFinish(process))
+        waitForProcessToFinish(process).then(resolve)
       }
 
-      const converteroptions = (opts.width && opts.height) ?
-      { resize: `${opts.width}x${opts.height}` } : {}
+      const converteroptions = (opts.width && opts.height) ? { resize: `${opts.width}x${opts.height}` } : {}
 
       const args = {
         wait: true,
@@ -60,7 +57,6 @@ async function connect(container) {
       }
 
       process.start(args, callback)
-
       // Upload the file to start the process
       process.upload(fs.createReadStream(file, { encoding: undefined }))
     })

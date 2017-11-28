@@ -109,8 +109,8 @@ module.exports = {
     url_link: ''
   }],
   charts: [{
-    id: 'donut_chart',
-    content_id: undefined,
-    dataProp: 'sentiment'
+    chartName: 'donut_chart',
+    dataProp: 'sentiment',
+    opts: {}
   }]
 }

@@ -2,6 +2,7 @@
 const express    = require('express')
 const httpStatus = require('http-status-codes')
 const sgMail     = require('@sendgrid/mail')
+const winston    = require('winston')
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
@@ -21,7 +22,7 @@ const connect = container => {
   }
 
   const { buildD3Chart } = d3Charts
-  const { convertSvgToPng, writeSvgToFile } = svgToPng
+  const { convertSvgToPng } = svgToPng
   const { compileTemplate } = templateEngine
 
   const controller = express.Router()
@@ -74,14 +75,7 @@ const connect = container => {
     next()
   }
 
-  function renderTemplateChart(fileId, markup, data) {
-    const compiledSvgChart = buildD3Chart(fileId, markup, templateDataModel[dataProp])
-
-    return writeSvgToFile(fileId, compiledSvgChart)
-      .then(svgFile => convertSvgToPng(fileId, svgFile, fileConverter))
-  }
-
-  async function uploadImageToCloud(fileId) {
+  async function uploadFileToCloud(fileId, isStatic) {
     const metaData = await cdn.retrieveObjectMetaData(fileId)
 
     // Object exists?
@@ -89,10 +83,15 @@ const connect = container => {
       return
     }
 
-    await cdn.putPublicObject(fileId, await fileHelpers.readStaticImg(fileId))
+    try {
+      const fileBitmap = isStatic ? await fileHelpers.readStaticFile(fileId) : await fileHelpers.readTmpFile(fileId)
+      await cdn.putPublicObject(fileId, fileBitmap)
+    } catch(e) {
+      winston.log('error', e)
+    }
   }
 
-  async function uploadImageToCache(fileId) {
+  async function uploadFileToCache(fileId, isStatic) {
     const fileExists = await repository.exists(fileId)
 
     // File exists
@@ -100,26 +99,54 @@ const connect = container => {
       return
     }
 
-    const bitmap = await fileHelpers.readStaticImg(fileId)
-    const zippedValue = await fileHelpers.deflateFile(bitmap)
+    const fileBitmap = isStatic ? await fileHelpers.readStaticFile(fileId) : await fileHelpers.readTmpFile(fileId)
+    const zippedValue = await fileHelpers.deflateFile(fileBitmap)
 
     repository.set(fileId, zippedValue.toString('base64'))
   }
 
-  function makeTemplateImages(imageArr, imageSource) {
+  function buildTemplateCharts(chartArr, templateData) {
+    return chartArr.map(async cur => {
+      const contentId = fileHelpers.generateUniqueFileName(cur.chartName)
+      const pngFileId = `${contentId}.png`
+      const svgFileId = `${contentId}.svg`
+
+      const fileData = {
+        file_id: pngFileId,
+        content_id: contentId,
+        url_link: (templateData.image_source === 'link') ? cdn.makeObjectLink(pngFileId) : undefined
+      }
+
+      const chartSvg = buildD3Chart(cur.chartName, cur.markup, templateData[cur.dataProp])
+
+      await fileHelpers.writeFileStreamAsync(chartSvg, fileHelpers.makeTmpFilePath(svgFileId))
+      await convertSvgToPng(svgFileId, pngFileId, fileConverter, cur.opts)
+
+      // async fire and forget
+      if (templateData.image_source === 'link') {
+        uploadFileToCloud(pngFileId, false)
+      } else {
+        uploadFileToCache(pngFileId)
+      }
+
+      return fileData
+    })
+  }
+
+  function buildTemplateImages(imageArr, templateData) {
     return imageArr.map(cur => {
-      const imageFile = Object.assign({}, cur, {
-        url_link: cdn.makeObjectLink(cur.file_id)
+      const fileData = Object.assign({}, cur, {
+        url_link: (templateData.image_source === 'link') ? cdn.makeObjectLink(cur.file_id) : undefined
       })
 
       // async fire and forget
-      if (imageSource === 'link') {
-        uploadImageToCloud(cur.file_id)
+      if (templateData.image_source === 'link') {
+        uploadFileToCloud(fileData.file_id, true)
       } else {
-        uploadImageToCache(cur.file_id)
+        uploadFileToCache(fileData.file_id)
       }
 
-      return imageFile
+      return fileData
     })
   }
 
@@ -129,18 +156,12 @@ const connect = container => {
     const { images, charts } = compiledTemplate
 
     // Lazy load images
-    const filePromises = makeTemplateImages(images.slice(), templateData.image_source)
+    const templateImages = buildTemplateImages(images.slice(), templateData)
+    const templateCharts = buildTemplateCharts(charts.slice(), templateData)
 
-    req.templateFiles = await Promise.all(filePromises)
+    req.templateFiles = await Promise.all(templateImages.concat(templateCharts))
+
     next()
-
-    //compiledTemplate.charts = await Promise.all(compiledTemplate.charts.map(async chart => {
-      //const { id, dataProp, markup } = chart
-
-      //return pngFile
-    //}))
-
-    //next()
   }
 
   async function renderTemplate(req, res, next) {

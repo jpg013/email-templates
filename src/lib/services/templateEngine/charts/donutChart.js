@@ -30,6 +30,6 @@ const markup = `<!DOCTYPE html>
 </html>`
 
 module.exports = {
-  id: 'donut_chart',
+  name: 'donut_chart',
   markup
 }

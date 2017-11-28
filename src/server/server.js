@@ -18,6 +18,7 @@ const start = (container) => {
     }
 
     const app = express()
+
     app.use(logger('dev'))
     app.use(helmet())
     app.use(bodyParser.json())

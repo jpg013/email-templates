@@ -5,7 +5,6 @@ const buildDonutChart = require('./buildDonutChart')
 const { JSDOM } = jsdom;
 
 async function connect(container) {
-
   function buildD3Chart(id='', markup='', data={}) {
     const dom = new JSDOM(markup, { runScripts: "dangerously" })
 

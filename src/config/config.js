@@ -20,7 +20,7 @@ const awsSettings = {
 const pathSettings = {
   tmpFileDir: path.resolve(appDir, 'public', 'tmp'),
   fileDir: path.resolve(appDir, 'public', 'static'),
-  staticImagesDir: path.resolve(appDir, 'public', 'static'),
+  staticFileDir: path.resolve(appDir, 'public', 'static'),
   templatesDir: path.resolve(appDir, 'lib', 'services', 'templateEngine', 'templates'),
   templateChartsDir: path.resolve(appDir, 'lib', 'services', 'templateEngine', 'charts')
 }

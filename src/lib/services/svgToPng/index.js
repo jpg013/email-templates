@@ -4,39 +4,23 @@ const fs       = require('fs')
 const uuidV4   = require('uuid/v4')
 
 async function connect(container) {
-  const { pathSettings } = container
+  const { fileHelpers } = container
 
-  if (!pathSettings) {
-    return new Error('missing required dependency')
+  if (!fileHelpers) {
+    throw new Error('missing required dependency')
   }
 
-  const makeTmpFilePath = f => path.resolve(pathSettings.tmpFileDir, f)
-
-  const writeToFile = (string, file) => {
-    return new Promise((resolve, reject) => {
-      const ws = fs.createWriteStream(file)
-
-      ws.on('finish', resolve);
-      ws.on('error', reject)
-      ws.write(string)
-      ws.end();
-    });
-  }
-
-  async function convertSvgToPng(fileId, svgFile, fileConverter, opts={}) {
-    const cid = `${fileId}_${uuidV4()}`
-    const file = makeTmpFilePath(`${cid}.png`)
-
+  async function convertSvgToPng(svgFileId, pngFileId, fileConverter, opts={}) {
+    const destFile = fileHelpers.makeTmpFilePath(pngFileId)
+    const sourceFile = fileHelpers.makeTmpFilePath(svgFileId)
     let process
 
     try {
-      process = await fileConverter.startProcess(
-        await fileConverter.createProcess(),
-        svgFile,
-        opts
-      )
+      process = await fileConverter.createProcess()
+      process = await fileConverter.startProcess(process, sourceFile, opts)
 
-      await fileConverter.downloadFile(process, file)
+      // Download on completion
+      await fileConverter.downloadFile(process, destFile)
     } catch(e) {
       winston.log('error', e)
     } finally {
@@ -44,20 +28,10 @@ async function connect(container) {
         process.delete()
       }
     }
-
-    return { file, cid }
-  }
-
-  async function writeSvgToFile(fileId, compiledSvgChart) {
-    const file = makeTmpFilePath(`${fileId}_${uuidV4()}.svg`)
-
-    await writeToFile(svg, file)
-    return file
   }
 
   return {
-    convertSvgToPng,
-    writeSvgToFile
+    convertSvgToPng
   }
 }
 

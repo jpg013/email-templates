@@ -8,13 +8,13 @@ function buildTemplateMap(templates, charts) {
   // Map reduce over templates
   return templates.map(tpl => {
     const tplCharts = tpl.charts.map(cur => {
-      const tplChart = charts.find(c => c.id === cur.id)
+      const tplChart = charts.find(c => c.name === cur.chartName)
 
       if (!tplChart) {
         throw new Error('missing template chart')
       }
 
-      return Object.assign({}, cur, tplChart)
+      return Object.assign({}, cur, { markup: tplChart.markup })
     })
 
     return Object.assign({}, tpl, {
