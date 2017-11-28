@@ -1,8 +1,9 @@
 //http://localhost:3000/templates/alerts?alert_types=volume&analysis_name=KBHERSH&analysis_link=https%3A%2F%2Fappdev.dunami.com%2F%23%2Fchannel%2F1169%2Fanalysis%2F13504&folder_name=KC%20Devs&folder_link=https%3A%2F%2Fappdev.dunami.com%2F%23%2Fchannel%2F1169&stream_start_date=2017-10-26T17%3A03%3A49.069Z&stream_end_date=2017-12-26T17%3A03%3A49.069Z&stream_refresh_period=daily&new_post_count=234
-const express    = require('express')
-const httpStatus = require('http-status-codes')
-const sgMail     = require('@sendgrid/mail')
-const winston    = require('winston')
+const express         = require('express')
+const httpStatus      = require('http-status-codes')
+const sgMail          = require('@sendgrid/mail')
+const winston         = require('winston')
+const cleanupTmpFiles = require('../../bin/cleanupTmpFiles')
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
@@ -72,6 +73,7 @@ const connect = container => {
     } catch(err) {
       return res.status(httpStatus.BAD_REQUEST).send({err: err})
     }
+
     next()
   }
 
@@ -97,6 +99,7 @@ const connect = container => {
       const zippedValue = await fileHelpers.deflateFile(bitmap)
 
       await repository.set(pngFileId, zippedValue.toString('base64'))
+      repository.expire(pngFileId, 60) // 60 seconds
 
       return fileData
     })
@@ -110,8 +113,8 @@ const connect = container => {
       })
 
       // async fire and forget
-      const fileBitmap = fileHelpers.makeTmpFilePath(fileData.file_id)
-      cdn.putObject(fileData.file_id, fileBitmap, { upsert: false })
+      fileHelpers.readStaticFile(fileData.file_id)
+        .then(fileBitmap => cdn.putObject(fileData.file_id, fileBitmap, { upsert: false }))
 
       return fileData
     })
@@ -159,11 +162,16 @@ const connect = container => {
     res.send(Buffer.from(req.results.html))
   }
 
+  function cleanupFiles(req, res, next) {
+    cleanupTmpFiles(fileHelpers)
+    next()
+  }
+
   // ======================================================
   // Controller Routes
   // ======================================================
-  controller.post('/', validateRequest, compileTemplateFiles, renderTemplate, handleResponse)
-  controller.get('/', validateRequest, compileTemplateFiles, renderTemplate, serveTemplateHTML)
+  controller.post('/', validateRequest, compileTemplateFiles, renderTemplate, cleanupFiles, handleResponse)
+  controller.get('/', validateRequest, compileTemplateFiles, renderTemplate, cleanupFiles, serveTemplateHTML)
 
   return controller
 }

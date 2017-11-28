@@ -25,9 +25,14 @@ async function connect(container) {
     })
   }
 
+  function expire(key, expiration) {
+    cache.expire(key, expiration)
+  }
+
   return {
     get,
-    set
+    set,
+    expire
   }
 }
 

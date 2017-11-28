@@ -37,21 +37,26 @@ const writeFileStreamAsync = (string, file) => {
 }
 
 function connect(pathSettings) {
-  const readStaticFile = fileId => readFileStreamAsync(path.resolve(pathSettings.staticFileDir, fileId))
-  const readTmpFile = fileId => readFileStreamAsync(path.resolve(pathSettings.tmpFileDir, fileId))
-  const deflateFile = file => deflateAsync(file)
-  const inflateFile = file => inflateAsync(file)
-  const makeTmpFilePath = f => path.resolve(pathSettings.tmpFileDir, f)
+  const readDirAsync           = promisify(fs.readdir)
+  const readStaticFile         = fileId => readFileStreamAsync(path.resolve(pathSettings.staticFileDir, fileId))
+  const readTmpFile            = fileId => readFileStreamAsync(path.resolve(pathSettings.tmpFileDir, fileId))
+  const readTmpDir             = () => readDirAsync(path.resolve(pathSettings.tmpFileDir))
+  const deleteTmpFile          = fileId => unlinkFileAsync(path.resolve(pathSettings.tmpFileDir, fileId))
+  const deflateFile            = file => deflateAsync(file)
+  const inflateFile            = file => inflateAsync(file)
+  const makeTmpFilePath        = f => path.resolve(pathSettings.tmpFileDir, f)
   const generateUniqueFileName = id => `${id}_${uuidV4()}`
 
   return {
     readStaticFile,
     readTmpFile,
+    deleteTmpFile,
     deflateFile,
     inflateFile,
     writeFileStreamAsync,
     makeTmpFilePath,
     generateUniqueFileName,
+    readTmpDir
   }
 }
 
