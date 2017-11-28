@@ -46,6 +46,8 @@ function connect(pathSettings) {
   const inflateFile            = file => inflateAsync(file)
   const makeTmpFilePath        = f => path.resolve(pathSettings.tmpFileDir, f)
   const generateUniqueFileName = id => `${id}_${uuidV4()}`
+  const loadDirFiles           = dir => readDirAsync(dir).then(f => f.map(cur => require(path.resolve(dir, cur))))
+
 
   return {
     readStaticFile,
@@ -56,7 +58,8 @@ function connect(pathSettings) {
     writeFileStreamAsync,
     makeTmpFilePath,
     generateUniqueFileName,
-    readTmpDir
+    readTmpDir,
+    loadDirFiles
   }
 }
 

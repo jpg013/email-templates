@@ -1,9 +1,3 @@
-const path          = require('path')
-const fs            = require('fs')
-const { promisify } = require('util')
-
-const readDirAsync  = promisify(fs.readdir)
-
 function buildTemplateMap(templates, charts) {
   // Map reduce over templates
   return templates.map(tpl => {
@@ -27,21 +21,9 @@ function buildTemplateMap(templates, charts) {
   }, {})
 }
 
-async function loadTemplateCharts(templateChartsDir) {
-  // Read in charts
-  const charts = await readDirAsync(templateChartsDir)
-  return charts.map(c => require(path.resolve(templateChartsDir, c)))
-}
-
-async function loadTemplates(templatesDir) {
-  // Read in templates
-  const tpls = await readDirAsync(templatesDir)
-  return tpls.map(t => require(path.resolve(templatesDir, t)))
-}
-
-module.exports = async (pathSettings) => {
-  const templates = await loadTemplates(pathSettings.templatesDir)
-  const tplCharts = await loadTemplateCharts(pathSettings.templateChartsDir)
+module.exports = async (fileHelpers, pathSettings) => {
+  const templates = await fileHelpers.loadDirFiles(pathSettings.templatesDir)
+  const tplCharts = await fileHelpers.loadDirFiles(pathSettings.templateChartsDir)
 
   return buildTemplateMap(templates, tplCharts)
 }

@@ -99,7 +99,7 @@ const connect = container => {
       const zippedValue = await fileHelpers.deflateFile(bitmap)
 
       await repository.set(pngFileId, zippedValue.toString('base64'))
-      repository.expire(pngFileId, 60) // 60 seconds
+      repository.expire(pngFileId, 600) // expire in 10 minutes
 
       return fileData
     })

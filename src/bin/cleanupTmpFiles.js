@@ -2,11 +2,7 @@ const CronJob       = require('cron').CronJob
 const winston       = require('winston')
 
 function logJob(err) {
-  if (err) {
-    winston.log('info', `Cleanup tmp files job completed with error, `, err);
-  } else {
-    winston.log('info', `Cleanup tmp files job completed successfully`);
-  }
+  winston.log('info', `Cleanup tmp files job completed`);
 }
 
 async function cleanDir(cb, fileHelpers) {
@@ -23,7 +19,7 @@ function cleanupTmpFiles(fileHelpers) {
   return new CronJob(
     startTime,
     cb => cleanDir(cb, fileHelpers).then(cb).catch(cb),
-    err => logJob(err),
+    logJob,
     true,
     'America/Los_Angeles'
   )

@@ -2,13 +2,13 @@ const ejs             = require('ejs')
 const makeTemplateMap = require("./makeTemplateMap")
 
 async function connect(container) {
-  const { pathSettings } = container
+  const { pathSettings, fileHelpers } = container
 
-  if (!pathSettings) {
+  if (!pathSettings || !fileHelpers) {
     throw new Error('missing required dependency')
   }
 
-  const templateMap = await makeTemplateMap(pathSettings)
+  const templateMap = await makeTemplateMap(fileHelpers, pathSettings)
 
   function compileTemplate(name, opts={}) {
     const tpl = templateMap[name]
