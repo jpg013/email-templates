@@ -13,7 +13,7 @@ async function connect(container) {
     if (!opts.upsert && await retrieveObjectMetaData(fileId)) {
       return
     }
-
+    
     try {
       const args = { ACL: 'public-read' }
 
@@ -23,9 +23,15 @@ async function connect(container) {
     }
   }
 
+  async function doesObjectExist(fileId) {
+    const metaData = await retrieveObjectMetaData(fileId)
+    return !!metaData
+  }
+
   return {
     makeObjectLink,
-    putObject
+    putObject,
+    doesObjectExist
   }
 }
 

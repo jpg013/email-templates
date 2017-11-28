@@ -8,7 +8,7 @@ const markup = `
   </head>
 
   <body style="padding: 0; margin: 0">
-    <table align="center" border="1" cellpadding="0" cellspacing="0" width="800" style="border-collapse: collapse;">
+    <table align="center" cellpadding="0" cellspacing="0" width="800" style="border-collapse: collapse;">
       <tr bgcolor="#EAEAEB" height="60">
         <td width="430" height="60" style="padding-left: 10px">
           <% if (image_source === 'embedded_base_64') { %>
@@ -39,47 +39,86 @@ const markup = `
 
       <tr bgcolor="#F4F4F4" height="100">
         <td colspan="3" style="padding-left: 10px;">
-          <font size="3" color="#59595a" face="sans-serif">
+          <font size="4" color="#59595a" face="sans-serif" style="font-weight: bolder">
             Your <a style="color: #15D399; text-decoration: none !important; color: " href="<%= analysis_link %> "> <%= analysis_name %> </a> analysis in the <%= folder_name %> folder has had a significant volume change.
+          </font>
+          <br />
+          <br />
+          <font size="3" color="#9F9F9F" face="sans-serif" style="font-weight: 300">
+            Streaming time range:&nbsp;<%= stream_period %>&nbsp;from <%= formatted_stream_start_date %>&nbsp;to&nbsp;<%= formatted_stream_start_date %>,&nbsp;refreshes&nbsp;<%= stream_frequency %>.
           </font>
         </td>
       </tr>
     </table>
 
     <table align="center" border="1" cellpadding="0" cellspacing="0" width="800" style="border-collapse: collapse;">
-      <tr height="350" bgcolor="#FFF">
-        <td width="400" height="100%">
-          <table height="100%" width="100%">
-            <tr height="30">
-              <td style="padding-left: 10px; text-transform: uppercase; font-weight: 300" >
+      <tr bgcolor="#FFF" height="300" valign="top">
+        <td width="400">
+          <table align="center" border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+            <tr>
+              <td height="30" style="padding-left: 10px; text-transform: uppercase; font-weight: 300">
                 <font size="3" color="#9F9F9F" face="sans-serif">
                   new posts
                 </font>
               </td>
             </tr>
 
-            <tr height="60" bgcolor="">
-
-              <td valign="top">
-                <% if (image_source === 'embedded_base_64') { %>
-                  <img style="display: block;" height="26" width="24" src="data:image/png;base64, <%- files[2].base_64_string %>"></img>
-                <% } else if (image_source === 'embedded_attachment'){ %>
-                  <img style="display: block;" style="display: block" alt="Plus Icon" height="26" width="24" src="cid:<%- files[2].content_id %>"></img>
-                <% } else if (image_source === 'link') { %>
-                  <img style="display: block" alt="Plus Icon" height="26" width="24" src="<%- files[2].url_link %>"></img>
-                <% } %>
+            <tr>
+              <td height="100">
+                <table align="center" border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+                  <tr>
+                    <td width="35" align="right">
+                      <% if (image_source === 'embedded_base_64') { %>
+                        <img style="display: block;" height="18" width="17" src="data:image/png;base64, <%- files[2].base_64_string %>"></img>
+                      <% } else if (image_source === 'embedded_attachment'){ %>
+                        <img style="display: block;" style="display: block" alt="Plus Icon" height="18" width="17" src="cid:<%- files[2].content_id %>"></img>
+                      <% } else if (image_source === 'link') { %>
+                        <img style="display: block" alt="Plus Icon" height="18" width="17" src="<%- files[2].url_link %>"></img>
+                      <% } %>
+                    </td>
+                    <td width="365" align="left" style="padding-left: 3px;">
+                      <font size="7" color="#59595a" face="sans-serif" style="font-weight: bolder"><%= new_post_count %></font>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="2" style="padding-left: 22px; font-weight: 300">
+                      <font size="3" color="#9F9F9F" face="sans-serif">
+                        since previous alert
+                      </font>
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
           </table>
         </td>
 
-        <td width="400" height="100%">
-          <table height="100%" width="100%">
-            <tr height="30">
-              <td style="padding-left: 10px; text-transform: uppercase; font-weight: 300" >
+        <td width="400">
+          <table align="center" border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+            <tr>
+              <td width="400" height="30" style="padding-left: 10px; text-transform: uppercase; font-weight: 300">
                 <font size="3" color="#9F9F9F" face="sans-serif">
-                  Sentiment Breakdown
+                  sentiment breakdown
                 </font>
+              </td>
+            </tr>
+
+            <tr>
+              <td>
+                <table align="center" border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+                  <tr>
+                    <td width="400" height="265" align="center">
+                      <% if (image_source === 'embedded_base_64') { %>
+                        <img style="display: block;" height="18" width="17" src="data:image/png;base64, <%- files[2].base_64_string %>"></img>
+                      <% } else if (image_source === 'embedded_attachment'){ %>
+                        <img style="display: block;" style="display: block" alt="Plus Icon" height="18" width="17" src="cid:<%- files[2].content_id %>"></img>
+                      <% } else if (image_source === 'link') { %>
+                        <img style="display: block" alt="Plus Icon" height="212" width="400" src="<%- files[3].url_link %>"></img>
+                      <% } %>
+                    </td>
+                  </tr>
+
+                </table>
               </td>
             </tr>
           </table>

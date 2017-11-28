@@ -45,7 +45,7 @@ const connect = container => {
   // ======================================================
   function sendEmail(html) {
     const msg = {
-      to: 'dunami.test@yahoo.com',
+      to: 'jpg013@gmail.com',
       from: 'justin.graber@pathar.net',
       subject: 'Email Template Test',
       html
@@ -86,20 +86,35 @@ const connect = container => {
       const fileData = {
         file_id: pngFileId,
         content_id: contentId,
-        url_link: (templateData.image_source === 'link') ? cdn.makeObjectLink(pngFileId) : undefined,
-        type: 'attachment'
+        url_link: (templateData.image_source === 'link') ? cdn.makeObjectLink(`${cur.chartName}.png`) : undefined,
+        type: (templateData.image_source === 'link') ? 'url_link' : 'attachment'
       }
 
-      const chartSvg = buildD3Chart(cur.chartName, cur.markup, templateData[cur.dataProp])
+      if (templateData.image_source === 'link') {
+        const objectExists = await cdn.doesObjectExist(`${cur.chartName}.png`)
 
-      await fileHelpers.writeFileStreamAsync(chartSvg, fileHelpers.makeTmpFilePath(svgFileId))
-      await convertSvgToPng(svgFileId, pngFileId, fileConverter, cur.opts)
+        if (!objectExists) {
+          console.log('we should not be here')
+          const chartSvg = buildD3Chart(cur.chartName, cur.markup, templateData[cur.dataProp])
 
-      const bitmap = await fileHelpers.readTmpFile(pngFileId)
-      const zippedValue = await fileHelpers.deflateFile(bitmap)
+          await fileHelpers.writeFileStreamAsync(chartSvg, fileHelpers.makeTmpFilePath(svgFileId))
+          await convertSvgToPng(svgFileId, pngFileId, fileConverter, cur.opts)
 
-      await repository.set(pngFileId, zippedValue.toString('base64'))
-      repository.expire(pngFileId, 600) // expire in 10 minutes
+          const bitmap = await fileHelpers.readTmpFile(pngFileId)
+          cdn.putObject(`${cur.chartName}.png`, bitmap)
+        }
+      } else {
+        const chartSvg = buildD3Chart(cur.chartName, cur.markup, templateData[cur.dataProp])
+
+        await fileHelpers.writeFileStreamAsync(chartSvg, fileHelpers.makeTmpFilePath(svgFileId))
+        await convertSvgToPng(svgFileId, pngFileId, fileConverter, cur.opts)
+
+        const bitmap = await fileHelpers.readTmpFile(pngFileId)
+        const zippedValue = await fileHelpers.deflateFile(bitmap)
+
+        await repository.set(pngFileId, zippedValue.toString('base64'))
+        repository.expire(pngFileId, 600) // expire in 10 minutes
+      }
 
       return fileData
     })
@@ -157,7 +172,7 @@ const connect = container => {
   }
 
   function serveTemplateHTML(req, res, next) {
-    // sendEmail(req.results.html)
+    sendEmail(req.results.html)
     res.set('Content-Type', 'text/html')
     res.send(Buffer.from(req.results.html))
   }
