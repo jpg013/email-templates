@@ -8,9 +8,12 @@ services:
       - "./:/home/app/email-templates"
       - "/home/app/email-templates/node_modules"
     ports:
-      - "3000:3000"
+      - "3030:3030"
     environment:
-      - CONTAINER_PORT=3000
+      - CONTAINER_PORT=3030
       - CONTAINER_NAME=email-templates
-      - SENDGRID_API_KEY='enter-key-here'
       - REDIS_CONNECTION=redis://docker.for.mac.localhost:6379
+      - CLOUD_CONVERT_API_KEY=ilKNOzJz2nABUbch3MYYE0JKZVCR-_id-2rpSrXWHac3wNcV2crq1gf-pRYpdrd2iVob15rFTGtJkSpUIdW_ug
+      - AWS_ACCESS_KEY_ID=AKIAIOZNLM4UR5MUP3RA
+      - AWS_SECRET_ACCESS_KEY=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
+      - SENDGRID_API_KEY=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

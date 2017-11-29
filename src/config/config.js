@@ -26,7 +26,7 @@ const pathSettings = {
 }
 
 const cloudConvertSettings = {
-  api_key: 'ilKNOzJz2nABUbch3MYYE0JKZVCR-_id-2rpSrXWHac3wNcV2crq1gf-pRYpdrd2iVob15rFTGtJkSpUIdW_ug'
+  api_key: process.env.CLOUD_CONVERT_API_KEY
 }
 
 module.exports = Object.assign({}, {
