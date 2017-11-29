@@ -1,22 +1,26 @@
 const templateModel = joi => {
-  const fileSchema = joi.object().keys({
+  const imageSchema = joi.object().keys({
+    url_src: joi.string(),
+  });
+
+  const attachmentSchema = joi.object().keys({
     file_id: joi.string().required(),
     content_id: joi.string().required(),
-    url_link: joi.string(),
-    type: joi.string().allow('url_link', 'attachment')
+    url_src: joi.string()
   });
 
   const schema = {
     html: joi.string(),
-    files: joi.array().items(fileSchema)
+    images: joi.array().items(imageSchema),
+    attachments: joi.array().items(attachmentSchema)
   }
 
   const validate = object => {
-    const { html, files } = object;
+    const { html, images, attachments } = object;
 
-    const schemaData = { html, files }
+    const props = { html, images, attachments }
 
-    return joi.validate(schemaData, schema)
+    return joi.validate(props, schema)
   }
 
   return {

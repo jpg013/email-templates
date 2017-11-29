@@ -1,18 +1,19 @@
-function buildTemplateMap(templates, charts) {
+function buildTemplateMap(templates, attachments) {
   // Map reduce over templates
   return templates.map(tpl => {
-    const tplCharts = tpl.charts.map(cur => {
-      const tplChart = charts.find(c => c.name === cur.chartName)
+    const tplAttachments = tpl.attachments.map(cur => {
 
-      if (!tplChart) {
-        throw new Error('missing template chart')
+      const tplAttachment = attachments.find(i => i.name === cur.attachmentName)
+
+      if (!tplAttachment) {
+        throw new Error('missing template attachment')
       }
 
-      return Object.assign({}, cur, { markup: tplChart.markup })
+      return Object.assign({}, cur, { markup: tplAttachment.markup })
     })
 
     return Object.assign({}, tpl, {
-      charts: tplCharts
+      attachments: tplAttachments
     })
   })
   .reduce((acc, cur) => {
@@ -23,7 +24,7 @@ function buildTemplateMap(templates, charts) {
 
 module.exports = async (fileHelpers, pathSettings) => {
   const templates = await fileHelpers.loadDirFiles(pathSettings.templatesDir)
-  const tplCharts = await fileHelpers.loadDirFiles(pathSettings.templateChartsDir)
+  const tplAttachments = await fileHelpers.loadDirFiles(pathSettings.templateAttachmentsDir)
 
-  return buildTemplateMap(templates, tplCharts)
+  return buildTemplateMap(templates, tplAttachments)
 }

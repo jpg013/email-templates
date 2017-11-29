@@ -2,7 +2,7 @@ function donutChart(d3) {
     var width,
         height,
         margin = {top: 10, right: 10, bottom: 10, left: 10},
-        colour = d3.scaleOrdinal(['#FF4F2F', '#6B6969', '#10CF50']), // colour scheme
+        colour = d3.scaleOrdinal(['#10CF50', '#FF4F2F', '#6B6969']), // colour scheme
         variable, // value in data that will dictate proportions on chart
         category, // compare data by
         padAngle, // effectively dictates the gap between slices
@@ -59,7 +59,7 @@ function donutChart(d3) {
               .style('font-family', 'sans-serif')
               .style('font-weight', '700')
               .style('font-style', 'normal')
-              .style('font-size', '22px');
+              .style('font-size', '26px');
             svg.append('g').attr('class', 'lines');
             // ===========================================================================================
 
@@ -189,8 +189,8 @@ function buildDonutChart(dom, d3, data) {
   const datavizElement = d3.select(document.querySelector('#dataviz-container'))
 
   const donut = donutChart(d3)
-       .width(960)
-       .height(500)
+       .width(1470)
+       .height(780)
        .cornerRadius(3) // sets how rounded the corners are on each slice
        .padAngle(0.025) // effectively dictates the gap between slices
        .variable('percent')

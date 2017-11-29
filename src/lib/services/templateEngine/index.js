@@ -17,12 +17,12 @@ async function connect(container) {
       throw new Error('invalid template')
     }
 
-    const { markup, charts, images } = tpl
+    const { markup, attachments, images } = tpl
 
     // Compile the tpl
     return {
       render: ejs.compile(markup, opts),
-      charts,
+      attachments,
       images
     }
   }

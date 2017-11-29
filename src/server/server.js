@@ -23,8 +23,6 @@ const start = (container) => {
     app.use(helmet())
     app.use(bodyParser.json())
     app.use(bodyParser.urlencoded({extended: true}))
-    app.use(express.static('public'))
-    app.use(express.static(path.join(__dirname, 'public')))
 
     // Configure the api
     api(app, container)

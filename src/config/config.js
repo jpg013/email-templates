@@ -22,7 +22,7 @@ const pathSettings = {
   fileDir: path.resolve(appDir, 'public', 'static'),
   staticFileDir: path.resolve(appDir, 'public', 'static'),
   templatesDir: path.resolve(appDir, 'lib', 'services', 'templateEngine', 'templates'),
-  templateChartsDir: path.resolve(appDir, 'lib', 'services', 'templateEngine', 'charts')
+  templateAttachmentsDir: path.resolve(appDir, 'lib', 'services', 'templateEngine', 'attachments')
 }
 
 const cloudConvertSettings = {

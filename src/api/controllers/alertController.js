@@ -1,4 +1,4 @@
-//http://localhost:3000/templates/alerts?alert_types=volume&analysis_name=KBHERSH&analysis_link=https%3A%2F%2Fappdev.dunami.com%2F%23%2Fchannel%2F1169%2Fanalysis%2F13504&folder_name=KC%20Devs&folder_link=https%3A%2F%2Fappdev.dunami.com%2F%23%2Fchannel%2F1169&stream_start_date=2017-10-26T17%3A03%3A49.069Z&stream_end_date=2017-12-26T17%3A03%3A49.069Z&stream_refresh_period=daily&new_post_count=234
+// http://localhost:3000/templates/alerts?alert_types=volume&analysis_name=KBHERSH&analysis_link=https%3A%2F%2Fappdev.dunami.com%2F%23%2Fchannel%2F1169%2Fanalysis%2F13504&folder_name=KC%20Devs&folder_link=https%3A%2F%2Fappdev.dunami.com%2F%23%2Fchannel%2F1169&stream_start_date=2017-10-26T17%3A03%3A49.069Z&stream_end_date=2017-12-26T17%3A03%3A49.069Z&stream_frequency=daily&new_post_count=234&image_source=link
 const express         = require('express')
 const httpStatus      = require('http-status-codes')
 const sgMail          = require('@sendgrid/mail')
@@ -77,34 +77,32 @@ const connect = container => {
     next()
   }
 
-  function buildTemplateCharts(chartArr, templateData) {
-    return chartArr.map(async cur => {
-      const contentId = fileHelpers.generateUniqueFileName(cur.chartName)
+  function buildTemplateAttachments(arr, templateData) {
+    return arr.map(async cur => {
+      const contentId = fileHelpers.generateUniqueFileName(cur.attachmentName)
       const pngFileId = `${contentId}.png`
       const svgFileId = `${contentId}.svg`
 
       const fileData = {
         file_id: pngFileId,
         content_id: contentId,
-        url_link: (templateData.image_source === 'link') ? cdn.makeObjectLink(`${cur.chartName}.png`) : undefined,
-        type: (templateData.image_source === 'link') ? 'url_link' : 'attachment'
+        url_src: cdn.makeObjectLink(`${cur.attachmentName}.png`),
       }
 
       if (templateData.image_source === 'link') {
-        const objectExists = await cdn.doesObjectExist(`${cur.chartName}.png`)
+        const objectExists = await cdn.doesObjectExist(`${cur.attachmentName}.png`)
 
         if (!objectExists) {
-          console.log('we should not be here')
-          const chartSvg = buildD3Chart(cur.chartName, cur.markup, templateData[cur.dataProp])
+          const chartSvg = buildD3Chart(cur.attachmentName, cur.markup, templateData[cur.dataProp])
 
           await fileHelpers.writeFileStreamAsync(chartSvg, fileHelpers.makeTmpFilePath(svgFileId))
           await convertSvgToPng(svgFileId, pngFileId, fileConverter, cur.opts)
 
           const bitmap = await fileHelpers.readTmpFile(pngFileId)
-          cdn.putObject(`${cur.chartName}.png`, bitmap)
+          cdn.putObject(`${cur.attachmentName}.png`, bitmap)
         }
       } else {
-        const chartSvg = buildD3Chart(cur.chartName, cur.markup, templateData[cur.dataProp])
+        const chartSvg = buildD3Chart(cur.attachmentName, cur.markup, templateData[cur.dataProp])
 
         await fileHelpers.writeFileStreamAsync(chartSvg, fileHelpers.makeTmpFilePath(svgFileId))
         await convertSvgToPng(svgFileId, pngFileId, fileConverter, cur.opts)
@@ -121,15 +119,14 @@ const connect = container => {
   }
 
   function buildTemplateImages(imageArr, templateData) {
-    return imageArr.map(cur => {
-      const fileData = Object.assign({}, cur, {
-        url_link: cdn.makeObjectLink(cur.file_id),
-        type: 'url_link'
+    return imageArr.map(({file_id}) => {
+      const fileData = Object.assign({}, {
+        url_src: cdn.makeObjectLink(file_id),
       })
 
       // async fire and forget
-      fileHelpers.readStaticFile(fileData.file_id)
-        .then(fileBitmap => cdn.putObject(fileData.file_id, fileBitmap, { upsert: false }))
+      fileHelpers.readStaticFile(file_id)
+        .then(fileBitmap => cdn.putObject(file_id, fileBitmap, { upsert: false }))
 
       return fileData
     })
@@ -138,29 +135,33 @@ const connect = container => {
   // Compile the template static images and d3 charts
   async function compileTemplateFiles(req, res, next) {
     const { templateData, compiledTemplate } = req
-    const { images, charts } = compiledTemplate
+    const { images, attachments } = compiledTemplate
 
     // Lazy load images
-    const templateImages = buildTemplateImages(images.slice(), templateData)
-    const templateCharts = buildTemplateCharts(charts.slice(), templateData)
+    const imgPromises = Promise.all(buildTemplateImages(images.slice(), templateData))
+    const attPromises = Promise.all(buildTemplateAttachments(attachments.slice(), templateData))
 
-    req.templateFiles = await Promise.all(templateImages.concat(templateCharts))
+    const [templateImages, templateAttachments] = await Promise.all([imgPromises, attPromises])
 
+    req.templateImages = templateImages
+    req.templateAttachments = templateAttachments
     next()
   }
 
   async function renderTemplate(req, res, next) {
-    const { compiledTemplate, templateData, templateFiles: files } = req
+    const { compiledTemplate, templateData, templateImages: images, templateAttachments: attachments } = req
 
     try {
       const renderArgs = {
         ...templateData,
-        files
+        images,
+        attachments
       }
 
       const templateObj = {
         html: compiledTemplate.render(renderArgs),
-        files
+        images,
+        attachments
       }
 
       req.results = await models.validate(templateObj, 'template')
@@ -172,7 +173,7 @@ const connect = container => {
   }
 
   function serveTemplateHTML(req, res, next) {
-    sendEmail(req.results.html)
+    //sendEmail(req.results.html)
     res.set('Content-Type', 'text/html')
     res.send(Buffer.from(req.results.html))
   }
