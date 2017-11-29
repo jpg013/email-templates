@@ -1,0 +1,23 @@
+#%RAML 1.0 DataType
+
+TemplateImage: !include ./templateImage.raml
+TemplateAttachment: !include ./TemplateAttachment.raml
+
+type: object
+properties:
+  html:
+    type: string
+    example: <html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Dunami Volume Change Alert</title><meta name="viewport" content="width=device-width, initial-scale=1.0"></head><body style="padding: 0; margin: 0"></body></html>
+    description: The email template html
+  images:
+    type: TemplateImage[]
+    description: Array of template images
+    example: [{url_src: 'https://s3.us-east-2.amazonaws.com/examplebucket/example_image.png'}]
+  attachments:
+    type: TemplateAttachment[]
+    description: Array of template attachments
+    example: [{
+      "file_id": "donut_chart_e060087d-efb8-4790-bb97-9b5ab0db463a.png",
+      "content_id": "donut_chart_e060087d-efb8-4790-bb97-9b5ab0db463a",
+      "url_src": "https://s3.us-east-2.amazonaws.com/dunamitest/donut_chart.png"
+      }]

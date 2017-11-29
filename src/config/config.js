@@ -2,7 +2,7 @@ const path = require('path')
 const appDir = path.dirname(require.main.filename)
 
 const serverSettings = {
-  port: process.env.CONTAINER_PORT || 3000
+  port: process.env.CONTAINER_PORT || 3030
 }
 
 const redisSettings = {

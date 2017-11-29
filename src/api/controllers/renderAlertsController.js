@@ -1,4 +1,4 @@
-// http://localhost:3000/templates/alerts?alert_types=volume&analysis_name=KBHERSH&analysis_link=https%3A%2F%2Fappdev.dunami.com%2F%23%2Fchannel%2F1169%2Fanalysis%2F13504&folder_name=KC%20Devs&folder_link=https%3A%2F%2Fappdev.dunami.com%2F%23%2Fchannel%2F1169&stream_start_date=2017-10-26T17%3A03%3A49.069Z&stream_end_date=2017-12-26T17%3A03%3A49.069Z&stream_frequency=daily&new_post_count=234&image_source=link
+// http://localhost:3030/templates/alerts?alert_types=volume&analysis_name=KBHERSH&analysis_link=https%3A%2F%2Fappdev.dunami.com%2F%23%2Fchannel%2F1169%2Fanalysis%2F13504&folder_name=KC%20Devs&folder_link=https%3A%2F%2Fappdev.dunami.com%2F%23%2Fchannel%2F1169&stream_start_date=2017-10-26T17%3A03%3A49.069Z&stream_end_date=2017-12-26T17%3A03%3A49.069Z&stream_frequency=daily&new_post_count=234&image_source=link
 const express         = require('express')
 const httpStatus      = require('http-status-codes')
 const sgMail          = require('@sendgrid/mail')
@@ -63,7 +63,7 @@ const connect = container => {
 
     // Build the template data model
     try {
-      req.templateData = await models.validate(data, 'alertTemplateRequest')
+      req.templateData = await models.validate(data, 'alertTemplateData')
     } catch(err) {
       return res.status(httpStatus.BAD_REQUEST).send({err: err})
     }
@@ -164,7 +164,7 @@ const connect = container => {
         attachments
       }
 
-      req.results = await models.validate(templateObj, 'template')
+      req.results = await models.validate(templateObj, 'renderedTemplate')
       next()
     } catch(err) {
       // TODO: handle error

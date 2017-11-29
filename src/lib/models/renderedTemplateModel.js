@@ -1,4 +1,4 @@
-const templateModel = joi => {
+const renderedTemplateModel = joi => {
   const imageSchema = joi.object().keys({
     url_src: joi.string(),
   });
@@ -28,4 +28,4 @@ const templateModel = joi => {
   }
 }
 
-module.exports = templateModel
+module.exports = renderedTemplateModel

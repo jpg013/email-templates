@@ -14,6 +14,6 @@ RUN npm install
 
 COPY . $HOME/email-templates
 
-EXPOSE 3000
+EXPOSE 3030
 
 CMD ["npm", "start"]

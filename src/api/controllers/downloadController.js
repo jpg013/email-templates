@@ -14,7 +14,7 @@ const connect = container => {
     const { fileId } = req.params
 
     const zippedValue = await repository.get(fileId)
-    
+
     if (!zippedValue) {
       return res.status(httpStatus.NOT_FOUND).send()
     }
@@ -25,7 +25,7 @@ const connect = container => {
       res.setHeader('Content-Type', 'image/png')
       res.end(file)
     } catch(e) {
-      return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({message: 'There was an error retrieving the file.'})
+      return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({message: 'There was an error downloading the attachment.'})
     }
   }
 

@@ -1,33 +1,29 @@
 #%RAML 1.0
-title: Dunami Email-Templates
+title: Dunami Email Template Service
+version: v1
 
 types: # global type definitions that can be reused throughout this API
-  template:
-    type: object
-    properties:
-      html: string
-      html:
-        type;
+  TemplateImage: !include ./templateImage.raml
+  TemplateAttachment: !include ./templateAttachment.raml
+  RenderedTemplate: !include ./renderedTemplate.raml
+  AlertTemplateData: !include ./alertTemplateData.raml
 
+/render_template:
+  /alerts:
+    post:
+      body:
+        application/json:
+          type: AlertTemplateData
+      responses:
+        200:
+          body:
+            application/json:
+              type: RenderedTemplate
 
-  User: # define type named `User`
-    type: object
-    properties:
-      firstName: string
-      lastName:  string
-      age:       number
-
-/templates/alerts:
-  get:
-    responses:
-      200:
-        body:
-          application/json:
-            type: User # reference to global type definition
-
-/files
-  get:
-    responses:
-      200:
-        body:
-          image/png
+/download_attachment:
+  /{file_id}:
+    get:
+      responses:
+        200:
+          body:
+            image/png:

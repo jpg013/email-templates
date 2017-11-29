@@ -1,0 +1,44 @@
+#%RAML 1.0 DataType
+
+type: object
+properties:
+  alert_types:
+    type: string[]
+    example: ['post', 'volume', 'sentiment']
+    description: The template alert types
+  analysis_name:
+    type: string
+    description: Analysis name
+  analysis_link:
+    type: string
+    description: Analysis url
+    example: https://appdev.dunami.com/#/channel/1169/analysis/13504
+  folder_name:
+    type: string
+    description: Name of the analysis folder
+  folder_link:
+    type: string
+    description: Folder url
+    example: https://appdev.dunami.com/#/channel/1169
+  stream_start_date:
+    type: datetime
+    description: Stream start date
+    example: 2017-11-29T19:18:15.953Z
+  stream_end_date:
+    type: datetime
+    description: Stream end date
+    example: 2017-11-29T19:18:15.953Z
+  stream_frequency:
+    type: string
+    description: The frequency of the stream
+    example: daily
+    enum: ['hourly', 'daily', 'weekly']
+  new_post_count:
+    type: number
+    description: Integer value of new posts
+    example: 234
+  stream_period:
+    type: string
+    description: The period of the stream
+    example: Three months
+    enum: ['One week', 'One month', 'Three months', 'Six months', 'One year']

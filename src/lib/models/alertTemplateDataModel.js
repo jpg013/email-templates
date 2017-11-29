@@ -1,6 +1,6 @@
 const moment = require('moment')
 
-const alertTemplateRequestModel = joi => {
+const alertTemplateDataModel = joi => {
   const schema = {
     alert_types: joi.array().min(1).required(),
     analysis_name: joi.string().required(),
@@ -100,4 +100,4 @@ const alertTemplateRequestModel = joi => {
   }
 }
 
-module.exports = alertTemplateRequestModel
+module.exports = alertTemplateDataModel
