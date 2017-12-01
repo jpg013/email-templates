@@ -10,9 +10,9 @@ const cleanupTmpFiles = require('../../bin/cleanupTmpFiles')
 const ALERT_TEMPLATE_ID = 'alert_template'
 
 const connect = container => {
-  const { services, repository, pathSettings, models, fileHelpers } = container
+  const { services, pathSettings, models, fileHelpers } = container
 
-  if (!services || !repository || !pathSettings || !models || !fileHelpers) {
+  if (!services || !pathSettings || !models || !fileHelpers) {
     throw new Error('missing required dependency')
   }
 
@@ -88,10 +88,6 @@ const connect = container => {
       await convertSvgToPng(svgFileId, pngFileId, fileConverter, cur.opts)
 
       const bitmap = await fileHelpers.readTmpFile(pngFileId)
-      const zippedValue = await fileHelpers.deflateFile(bitmap)
-
-      await repository.set(pngFileId, zippedValue.toString('base64'))
-      repository.expire(pngFileId, 600) // expire in 10 minutes
 
       return (templateData.image_source === 'base_64_string') ?
         Object.assign(fileData, {}, {
@@ -152,11 +148,10 @@ const connect = container => {
   function serveTemplateHTML(req, res, next) {
     //sendEmail(req.results.html)
     res.set('Content-Type', 'text/html')
-    res.send(req.results.html)
-    // res.send(Buffer.from(req.results.html))
+    res.send(Buffer.from(req.results.html))
   }
 
-  function cleanupFiles(req, res, next) {
+  function doCleanup(req, res, next) {
     cleanupTmpFiles(fileHelpers)
     next()
   }
@@ -164,8 +159,8 @@ const connect = container => {
   // ======================================================
   // Controller Routes
   // ======================================================
-  controller.post('/', validateRequest, compileTemplateFiles, renderTemplate, cleanupFiles, handleResponse)
-  controller.get('/', validateRequest, compileTemplateFiles, renderTemplate, cleanupFiles, serveTemplateHTML)
+  controller.post('/', validateRequest, compileTemplateFiles, renderTemplate, doCleanup, handleResponse)
+  controller.get('/', validateRequest, compileTemplateFiles, renderTemplate, serveTemplateHTML)
 
   return controller
 }

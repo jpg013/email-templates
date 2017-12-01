@@ -2,9 +2,9 @@ const express       = require('express')
 const httpStatus    = require('http-status-codes')
 
 const connect = container => {
-  const { repository, fileHelpers } = container
+  const { fileHelpers } = container
 
-  if (!repository || !fileHelpers) {
+  if (!fileHelpers) {
     throw new Error('missing required dependency')
   }
 
@@ -13,19 +13,13 @@ const connect = container => {
   async function getFile(req, res, next) {
     const { fileId } = req.params
 
-    const zippedValue = await repository.get(fileId)
-
-    if (!zippedValue) {
-      return res.status(httpStatus.NOT_FOUND).send()
-    }
-
     try {
-      const file = await fileHelpers.inflateFile(Buffer.from(zippedValue, 'base64'))
+      const fileBitmap = await fileHelpers.readTmpFile(fileId)
 
       res.setHeader('Content-Type', 'image/png')
-      res.end(file)
+      res.end(fileBitmap)
     } catch(e) {
-      return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({message: 'There was an error downloading the attachment.'})
+      return res.status(httpStatus.BAD_REQUEST).send({message: 'Attachment does not exist.'})
     }
   }
 

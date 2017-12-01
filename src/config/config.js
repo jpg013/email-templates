@@ -5,10 +5,6 @@ const serverSettings = {
   port: process.env.CONTAINER_PORT || 3030
 }
 
-const redisSettings = {
-  connection: process.env.REDIS_CONNECTION || 'redis://localhost:6379'
-}
-
 const awsSettings = {
   base_url: process.env.AWS_S3_URL || 'https://s3.us-east-2.amazonaws.com',
   bucket_name: process.env.AWS_S3_BUCKET || 'dunamitest',
@@ -31,7 +27,6 @@ const cloudConvertSettings = {
 
 module.exports = Object.assign({}, {
   serverSettings,
-  redisSettings,
   pathSettings,
   cloudConvertSettings,
   awsSettings

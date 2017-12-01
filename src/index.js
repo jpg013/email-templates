@@ -6,7 +6,6 @@ const config                    = require('./config')
 const mediator                  = new EventEmitter()
 const winston                   = require('winston')
 const services                  = require('./lib/services')
-const repository                = require('./lib/repository')
 
 winston.log('info', '--- Email Templates Service---')
 
@@ -20,9 +19,6 @@ process.on('uncaughtRejection', (err, promise) => {
 
 async function onDIReady(container) {
   try {
-    container.repository = await repository.connect(container)
-    winston.log('info', 'Connected to repository')
-
     container.services = await services.connect(container)
     winston.log('info', 'Connected to services')
 

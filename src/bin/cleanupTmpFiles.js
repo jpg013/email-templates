@@ -1,14 +1,19 @@
-const CronJob       = require('cron').CronJob
-const winston       = require('winston')
+const CronJob         = require('cron').CronJob
+const winston         = require('winston')
+
+const FILE_EXPIRATION = 300000 // 5 minutes
 
 function logJob(err) {
   winston.log('info', `Cleanup tmp files job completed`);
 }
 
 async function cleanDir(cb, fileHelpers) {
-  const dirFiles = await fileHelpers.readTmpDir()
+  const now = new Date()
+  const deletionTime = now.setMilliseconds(now.getMilliseconds() - FILE_EXPIRATION)
+  const fileStats = await fileHelpers.getTmpFileStats()
+  const filesNeedDeleted = fileStats.filter(cur => cur.createdTime < deletionTime)
 
-  return await Promise.all(dirFiles.map(f => fileHelpers.deleteTmpFile(f)))
+  return await Promise.all(filesNeedDeleted.map(cur => fileHelpers.deleteTmpFile(cur.fileId)))
 }
 
 function cleanupTmpFiles(fileHelpers) {

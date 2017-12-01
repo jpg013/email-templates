@@ -7,6 +7,7 @@ const uuidV4              = require('uuid/v4')
 const deflateAsync    = promisify(zlib.deflate)
 const inflateAsync    = promisify(zlib.inflate)
 const unlinkFileAsync = promisify(fs.unlink)
+const fileStatAsync   = promisify(fs.stat)
 
 const readFileStreamAsync = (file, opts={}) => {
   return new Promise((resolve, reject) => {
@@ -16,9 +17,7 @@ const readFileStreamAsync = (file, opts={}) => {
 
       readStream.on('data', chunk => bitmap = Buffer.concat([bitmap, chunk]))
       readStream.on('end', () => resolve(bitmap))
-      readStream.on('error', err => {
-        throw new Error(err)
-      })
+      readStream.on('error', reject)
     } catch(e) {
       reject(e)
     }
@@ -47,7 +46,19 @@ function connect(pathSettings) {
   const makeTmpFilePath        = f => path.resolve(pathSettings.tmpFileDir, f)
   const generateUniqueFileName = id => `${id}_${uuidV4()}`
   const loadDirFiles           = dir => readDirAsync(dir).then(f => f.map(cur => require(path.resolve(dir, cur))))
+  const getTmpFileStats        = () => {
+    return readTmpDir()
+      .then(dir => {
+        return Promise.all(dir.map(async fileId => {
+          const fileStat = await fileStatAsync(makeTmpFilePath(fileId))
 
+          return Object.assign({}, {
+            createdTime: fileStat.birthtime.getTime(),
+            fileId
+          })
+        }))
+      })
+  }
 
   return {
     readStaticFile,
@@ -59,7 +70,8 @@ function connect(pathSettings) {
     makeTmpFilePath,
     generateUniqueFileName,
     readTmpDir,
-    loadDirFiles
+    loadDirFiles,
+    getTmpFileStats
   }
 }
 

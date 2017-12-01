@@ -205,10 +205,6 @@ function buildDonutChart(dom, d3, data) {
     .call(donut); // draw chart in div
 
   return document.querySelector('svg').outerHTML
-
-  // console.log(document.querySelector('svg').outerHTML)
-
-  // return document.firstElementChild.outerHTML
 }
 
 module.exports = buildDonutChart
