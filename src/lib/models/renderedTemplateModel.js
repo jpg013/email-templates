@@ -1,24 +1,19 @@
 const renderedTemplateModel = joi => {
-  const imageSchema = joi.object().keys({
-    url_src: joi.string(),
-  });
-
   const attachmentSchema = joi.object().keys({
     file_id: joi.string().required(),
     content_id: joi.string().required(),
-    url_src: joi.string()
+    base_64_string: joi.string()
   });
 
   const schema = {
     html: joi.string(),
-    images: joi.array().items(imageSchema),
     attachments: joi.array().items(attachmentSchema)
   }
 
   const validate = object => {
-    const { html, images, attachments } = object;
+    const { html, attachments } = object;
 
-    const props = { html, images, attachments }
+    const props = { html, attachments }
 
     return joi.validate(props, schema)
   }

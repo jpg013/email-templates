@@ -1,11 +1,47 @@
-const joi                    = require('joi')
-const alertTemplateDataModel = require('./alertTemplateDataModel')
-const renderedTemplateModel  = require('./renderedTemplateModel')
+const joi                       = require('joi')
+const alertTemplateRequestModel = require('./alertTemplateRequestModel')
+const renderedTemplateModel     = require('./renderedTemplateModel')
+const customErrors              = require('./')
+
+const formatSchemaError = err => {
+  if (!err || typeof err !== 'object') {
+    return
+  }
+
+  const details = err.details ? err.details[0] : undefined
+
+  if (!details) {
+    return
+  }
+
+  const errKey = details.path.reduce((acc, cur) => {
+    if (!acc.length) {
+      return cur
+    }
+
+    return typeof cur === 'string' ? `${acc}.${cur}` : acc
+  }, '')
+
+  const { type, context, message } = details
+
+  switch(type) {
+    case 'any.required':
+      return `${context.key} is a required field`
+    case 'string.base':
+    case 'number.base':
+      return `Invalid "${errKey}" field. ${message}`
+    case 'any.allowOnly':
+      return `Invalid "${errKey}" field`
+    default:
+      return
+  }
+}
 
 const models = Object.create({
-  alertTemplateData: alertTemplateDataModel(joi),
-  renderedTemplate: renderedTemplateModel(joi)
+  alertTemplateRequest: alertTemplateRequestModel(joi, formatSchemaError),
+  renderedTemplate: renderedTemplateModel(joi, formatSchemaError)
 })
+
 
 const schemaValidator = (object, type) => {
   return new Promise((resolve, reject) => {
@@ -19,16 +55,16 @@ const schemaValidator = (object, type) => {
 
     const validator = models[type].validate.bind(null, object)
 
-    const { error, value } = validator()
+    try {
+      const model = validator()
 
-    if (error) {
-      return reject(error)
+      resolve(model)
+    } catch(err) {
+      reject(err)
     }
-
-    resolve(value)
   })
 }
 
 module.exports = Object.assign({
-  validate: schemaValidator,
+  validate: schemaValidator
 })

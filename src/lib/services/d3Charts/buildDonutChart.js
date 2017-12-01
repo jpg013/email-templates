@@ -8,7 +8,7 @@ function donutChart(d3) {
         padAngle, // effectively dictates the gap between slices
         floatFormat = d3.format('.4r'),
         cornerRadius, // sets how rounded the corners are on each slice
-        percentFormat = d3.format(',.2%');
+        percentFormat = d3.format(',.0%');
 
     function chart(selection) {
         selection.each(function(data) {
@@ -57,9 +57,9 @@ function donutChart(d3) {
             svg.append('g').attr('class', 'slices');
             svg.append('g').attr('class', 'labelName')
               .style('font-family', 'sans-serif')
-              .style('font-weight', '700')
+              .style('font-weight', '500')
               .style('font-style', 'normal')
-              .style('font-size', '26px');
+              .style('font-size', '34px');
             svg.append('g').attr('class', 'lines');
             // ===========================================================================================
 
@@ -80,8 +80,12 @@ function donutChart(d3) {
               .enter().append('text')
                 .attr('dy', '.35em')
                 .html(function(d) {
+                    const formattedCategory = d.data[category].toUpperCase().slice(0, 1) + d.data[category].slice(1)
                     // add "key: value" for given category. Number inside tspan is bolded in stylesheet.
-                    return d.data[category] + ': <tspan style="font-style: normal; font-weight: 700">' + percentFormat(d.data[variable]) + '</tspan>';
+                    return `<tspan style="fill: #59595a; stroke: #59595a; font-style: normal; font-weight: 700; font-size: 46px">${percentFormat(d.data[variable])}</tspan>` +
+                      ` <tspan dx="10" style="fill: #9F9F9F; stroke: #9F9F9F; font-style: normal; font-weight: 500; font-size: 34px">${formattedCategory}</tspan>`
+
+                    //return formattedCategory + ': <tspan style="font-style: normal; font-weight: 500; font-size: 34px">' + percentFormat(d.data[variable]) + '</tspan>';
                 })
                 .attr('transform', function(d) {
 
@@ -105,7 +109,7 @@ function donutChart(d3) {
                 .selectAll('polyline')
                 .data(pie)
               .enter().append('polyline')
-                .style('opacity', '.3')
+                .style('opacity', '.4')
                 .style('stroke', 'black')
                 .style('stroke-width', '2px')
                 .style('fill', 'none')
@@ -189,8 +193,8 @@ function buildDonutChart(dom, d3, data) {
   const datavizElement = d3.select(document.querySelector('#dataviz-container'))
 
   const donut = donutChart(d3)
-       .width(1470)
-       .height(780)
+       .width(1213)
+       .height(644)
        .cornerRadius(3) // sets how rounded the corners are on each slice
        .padAngle(0.025) // effectively dictates the gap between slices
        .variable('percent')

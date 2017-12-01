@@ -1,11 +1,11 @@
-// http://localhost:3030/templates/alerts?alert_types=volume&analysis_name=KBHERSH&analysis_link=https%3A%2F%2Fappdev.dunami.com%2F%23%2Fchannel%2F1169%2Fanalysis%2F13504&folder_name=KC%20Devs&folder_link=https%3A%2F%2Fappdev.dunami.com%2F%23%2Fchannel%2F1169&stream_start_date=2017-10-26T17%3A03%3A49.069Z&stream_end_date=2017-12-26T17%3A03%3A49.069Z&stream_frequency=daily&new_post_count=234&image_source=link
+// http://localhost:3030/render_template/alerts?alert_types=volume&app_environment=appdev.dunami&stream_end_date=2017-12-26T17:03:49.069Z&analysis_name=kbhersh&analysis_id=13504&folder_name=KC Devs&folder_id=1169&stream_frequency=hourly&new_post_count=234&stream_period=One month&image_source=base_64_string
 const express         = require('express')
 const httpStatus      = require('http-status-codes')
 const sgMail          = require('@sendgrid/mail')
 const winston         = require('winston')
 const cleanupTmpFiles = require('../../bin/cleanupTmpFiles')
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+// sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
 const ALERT_TEMPLATE_ID = 'alert_template'
 
@@ -31,13 +31,8 @@ const connect = container => {
   // ======================================================
   // Response Handling
   // ======================================================
-  const handleResponse = (req, res) => {
-    if (req.error) {
-      const { message, status } = req.error
-      res.status(status || httpStatus.INTERNAL_SERVER_ERROR).send({message})
-    } else {
-      res.status(httpStatus.OK).send(req.results)
-    }
+  const handleResponse = (req, res, next) => {
+    res.status(httpStatus.OK).send(req.results)
   }
 
   // ======================================================
@@ -57,21 +52,22 @@ const connect = container => {
     const data = req.method === 'GET' ? req.query : req.body
 
     // Hack for 'GET' query params, convert strings to array
-    if (typeof data.alert_types !== 'object') {
-      data.alert_types = data.alert_types.split(',')
+    if (data.alert_types && typeof data.alert_types === 'string') {
+      data.alert_types = data.alert_types.split(',').map(cur => cur.trim())
     }
 
     // Build the template data model
     try {
-      req.templateData = await models.validate(data, 'alertTemplateData')
+      req.templateDataModel = await models.validate(data, 'alertTemplateRequest')
     } catch(err) {
-      return res.status(httpStatus.BAD_REQUEST).send({err: err})
+      return next(err)
     }
+
     // Build the compiled template
     try {
       req.compiledTemplate = compileTemplate(ALERT_TEMPLATE_ID)
     } catch(err) {
-      return res.status(httpStatus.BAD_REQUEST).send({err: err})
+      return next(err)
     }
 
     next()
@@ -82,47 +78,32 @@ const connect = container => {
       const contentId = fileHelpers.generateUniqueFileName(cur.attachmentName)
       const pngFileId = `${contentId}.png`
       const svgFileId = `${contentId}.svg`
-
       const fileData = {
         file_id: pngFileId,
-        content_id: contentId,
-        url_src: cdn.makeObjectLink(`${cur.attachmentName}.png`),
+        content_id: contentId
       }
+      const chartSvg = buildD3Chart(cur.attachmentName, cur.markup, templateData[cur.dataProp])
 
-      if (templateData.image_source === 'link') {
-        const objectExists = await cdn.doesObjectExist(`${cur.attachmentName}.png`)
+      await fileHelpers.writeFileStreamAsync(chartSvg, fileHelpers.makeTmpFilePath(svgFileId))
+      await convertSvgToPng(svgFileId, pngFileId, fileConverter, cur.opts)
 
-        if (!objectExists) {
-          const chartSvg = buildD3Chart(cur.attachmentName, cur.markup, templateData[cur.dataProp])
+      const bitmap = await fileHelpers.readTmpFile(pngFileId)
+      const zippedValue = await fileHelpers.deflateFile(bitmap)
 
-          await fileHelpers.writeFileStreamAsync(chartSvg, fileHelpers.makeTmpFilePath(svgFileId))
-          await convertSvgToPng(svgFileId, pngFileId, fileConverter, cur.opts)
+      await repository.set(pngFileId, zippedValue.toString('base64'))
+      repository.expire(pngFileId, 600) // expire in 10 minutes
 
-          const bitmap = await fileHelpers.readTmpFile(pngFileId)
-          cdn.putObject(`${cur.attachmentName}.png`, bitmap)
-        }
-      } else {
-        const chartSvg = buildD3Chart(cur.attachmentName, cur.markup, templateData[cur.dataProp])
-
-        await fileHelpers.writeFileStreamAsync(chartSvg, fileHelpers.makeTmpFilePath(svgFileId))
-        await convertSvgToPng(svgFileId, pngFileId, fileConverter, cur.opts)
-
-        const bitmap = await fileHelpers.readTmpFile(pngFileId)
-        const zippedValue = await fileHelpers.deflateFile(bitmap)
-
-        await repository.set(pngFileId, zippedValue.toString('base64'))
-        repository.expire(pngFileId, 600) // expire in 10 minutes
-      }
-
-      return fileData
+      return (templateData.image_source === 'base_64_string') ?
+        Object.assign(fileData, {}, {
+          base_64_string: bitmap.toString('base64')
+        }) :
+        fileData
     })
   }
 
   function buildTemplateImages(imageArr, templateData) {
     return imageArr.map(({file_id}) => {
-      const fileData = Object.assign({}, {
-        url_src: cdn.makeObjectLink(file_id),
-      })
+      const fileData = Object.assign({}, { url_src: cdn.makeObjectLink(file_id) })
 
       // async fire and forget
       fileHelpers.readStaticFile(file_id)
@@ -134,34 +115,30 @@ const connect = container => {
 
   // Compile the template static images and d3 charts
   async function compileTemplateFiles(req, res, next) {
-    const { templateData, compiledTemplate } = req
+    const { templateDataModel, compiledTemplate } = req
     const { images, attachments } = compiledTemplate
 
-    // Lazy load images
-    const imgPromises = Promise.all(buildTemplateImages(images.slice(), templateData))
-    const attPromises = Promise.all(buildTemplateAttachments(attachments.slice(), templateData))
+    // F&F - Lazy load images
+    const templateImages = buildTemplateImages(images.slice(), templateDataModel)
+    const templateAttachments = await Promise.all(buildTemplateAttachments(attachments.slice(), templateDataModel))
 
-    const [templateImages, templateAttachments] = await Promise.all([imgPromises, attPromises])
 
-    req.templateImages = templateImages
-    req.templateAttachments = templateAttachments
+    req.templateDataModel = Object.assign({}, templateDataModel, {
+      images: templateImages,
+      attachments: templateAttachments
+    })
+
     next()
   }
 
   async function renderTemplate(req, res, next) {
-    const { compiledTemplate, templateData, templateImages: images, templateAttachments: attachments } = req
+    const { compiledTemplate, templateDataModel } = req
 
     try {
-      const renderArgs = {
-        ...templateData,
-        images,
-        attachments
-      }
-
+      const renderArgs = { ...templateDataModel }
       const templateObj = {
         html: compiledTemplate.render(renderArgs),
-        images,
-        attachments
+        attachments: templateDataModel.attachments
       }
 
       req.results = await models.validate(templateObj, 'renderedTemplate')
@@ -175,7 +152,8 @@ const connect = container => {
   function serveTemplateHTML(req, res, next) {
     //sendEmail(req.results.html)
     res.set('Content-Type', 'text/html')
-    res.send(Buffer.from(req.results.html))
+    res.send(req.results.html)
+    // res.send(Buffer.from(req.results.html))
   }
 
   function cleanupFiles(req, res, next) {

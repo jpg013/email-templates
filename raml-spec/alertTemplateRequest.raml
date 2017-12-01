@@ -2,28 +2,31 @@
 
 type: object
 properties:
+  app_environment:
+    type: string
+    example: dunami
+    description: The application environment that generated the alert
+    enum: ['appdev.dunami', 'app.dunami', 'appqa.dunami']
   alert_types:
     type: string[]
     example: ['post', 'volume', 'sentiment']
     description: The template alert types
   analysis_name:
     type: string
-    description: Analysis name
-  analysis_link:
-    type: string
-    description: Analysis url
-    example: https://appdev.dunami.com/#/channel/1169/analysis/13504
+    description: The name of the analysis in which the alert was generated
+    example: tlot
+  analysis_id:
+    type: number
+    description: The id of the analysis in which the alert was generated
+    example: 13504
   folder_name:
     type: string
-    description: Name of the analysis folder
-  folder_link:
-    type: string
-    description: Folder url
-    example: https://appdev.dunami.com/#/channel/1169
-  stream_start_date:
-    type: datetime
-    description: Stream start date
-    example: 2017-11-29T19:18:15.953Z
+    description: The name of the folder which contains the analysis alert
+    example: KC Devs
+  folder_id:
+    type: number
+    description: The ID of the folder which contains the analysis alert
+    example: 1169
   stream_end_date:
     type: datetime
     description: Stream end date

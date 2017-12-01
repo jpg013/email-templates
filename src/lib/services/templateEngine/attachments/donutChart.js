@@ -19,8 +19,6 @@ const markup = `<!DOCTYPE html>
         justify-content: center;
       }
     </style>
-
-    <script src="index.js"></script>
   </head>
   <body>
     <div class="dataviz__container">

@@ -11,23 +11,11 @@ const markup = `
     <table align="center" cellpadding="0" cellspacing="0" width="800" style="border-collapse: collapse;">
       <tr bgcolor="#EAEAEB" height="60">
         <td width="430" height="60" style="padding-left: 10px">
-          <% if (image_source === 'embedded_base_64') { %>
-            <img style="display: block; margin-top: -5px;" height="60" width="135" width: alt="Dunami Logo" src="data:image/png;base64, <%- images[0].base_64_string %>"></img>
-          <% } else if (image_source === 'embedded_attachment') { %>
-            <img style="display: block; margin-top: -5px;" height="60" width="135" width: alt="Dunami Logo" src="cid:<%- images[0].content_id %>"></img>
-          <% } else if (image_source === 'link') { %>
-            <img style="display: block; margin-top: -5px;" height="60" width="135" width: alt="Dunami Logo" src="<%- images[0].url_src %>"></img>
-          <% } %>
+          <img style="display: block; margin-top: -5px;" height="60" width="135" width: alt="Dunami Logo" src="<%- images[0].url_src %>"></img>
         </td>
 
         <td width="40" height="60" align="right">
-          <% if (image_source === 'embedded_base_64') { %>
-            <img style="display: block;" height="26" width="24" src="data:image/png;base64, <%- images[1].base_64_string %>"></img>
-          <% } else if (image_source === 'embedded_attachment') { %>
-            <img style="display: block;" height="26" width="24" src="cid:<%- images[1].content_id %>"></img>
-          <% } else if (image_source === 'link') { %>
-            <img style="display: block;" height="26" width="24" width: alt="Alert" src="<%- images[1].url_src %>"></img>
-          <% } %>
+          <img style="display: block;" height="26" width="24" width: alt="Alert" src="<%- images[1].url_src %>"></img>
         </td>
 
         <td width="330" height="60" style="padding-right: 10px; letter-spacing: .7px" align="right">
@@ -45,7 +33,7 @@ const markup = `
           <br />
           <br />
           <font size="3" color="#9F9F9F" face="sans-serif" style="font-weight: 300">
-            Streaming time range:&nbsp;<%= stream_period %>&nbsp;from <%= formatted_stream_start_date %>&nbsp;to&nbsp;<%= formatted_stream_start_date %>,&nbsp;refreshes&nbsp;<%= stream_frequency %>.
+            Streaming period:&nbsp;<%= stream_period %>&nbsp;Ends&nbsp;<%= formatted_stream_end_date %>,&nbsp;refreshes&nbsp;<%= stream_frequency %>.
           </font>
         </td>
       </tr>
@@ -68,13 +56,7 @@ const markup = `
                 <table align="top" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
                   <tr>
                     <td width="35" align="right">
-                      <% if (image_source === 'embedded_base_64') { %>
-                        <img style="display: block" alt="Plus Icon" height="24" width="24" src="data:image/png;base64, <%- images[2].base_64_string %>"></img>
-                      <% } else if (image_source === 'embedded_attachment'){ %>
-                        <img style="display: block" alt="Plus Icon" style="display: block" alt="Plus Icon" height="24" width="24" src="cid:<%- images[2].content_id %>"></img>
-                      <% } else if (image_source === 'link') { %>
-                        <img style="display: block" alt="Plus Icon" height="24" width="24" src="<%- images[2].url_src %>"></img>
-                      <% } %>
+                      <img style="display: block" alt="Plus Icon" height="24" width="24" src="<%- images[2].url_src %>"></img>
                     </td>
                     <td width="365" align="left" style="padding-left: 5px; font-size: 76px; letter-spacing: 2.5px; font-weight: 700">
                       <font color="#59595a" face="sans-serif"><%= new_post_count %></font>
@@ -108,20 +90,54 @@ const markup = `
                 <table align="center" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
                   <tr>
                     <td width="400" height="200" align="center" style="padding-top: 10px">
-                      <% if (image_source === 'embedded_base_64') { %>
-                        <img style="display: block;" height="18" width="17" src="data:image/png;base64, <%- attachments[0].base_64_string %>"></img>
-                      <% } else if (image_source === 'embedded_attachment'){ %>
-                        <img style="display: block;" style="display: block" alt="Plus Icon" height="18" width="17" src="cid:<%- attachments[0].content_id %>"></img>
-                      <% } else if (image_source === 'link') { %>
-                        <img style="display: block" alt="Plus Icon" height="200" width="370" src="<%- attachments[0].url_src %>"></img>
+                      <% if (image_source === 'base_64_string') { %>
+                        <img style="display: block;" height="200" width="370" src="data:image/png;base64, <%- attachments[0].base_64_string %>"></img>
+                      <% } else if (image_source === 'attachment'){ %>
+                        <img style="display: block;" style="display: block" alt="Plus Icon" height="200" width="370" src="cid:<%- attachments[0].content_id %>"></img>
                       <% } %>
                     </td>
                   </tr>
-
                 </table>
               </td>
             </tr>
           </table>
+        </td>
+      </tr>
+    </table>
+
+    <table align="center" cellpadding="0" cellspacing="0" width="800" style="border-collapse: collapse; border-left: 1px solid #DEDEDE; border-right: 1px solid #DEDEDE; border-bottom: 1px solid #DEDEDE" height="320">
+      <tr height="30">
+        <td height="30" style="padding-left: 10px; text-transform: uppercase; font-weight: 300" bgcolor="green" width="400">
+          <font size="3" color="#9F9F9F" face="sans-serif">
+            volume trends
+          </font>
+        </td>
+        <td height="30" bgcolor="purple" width="400">
+          <span style="display: inline-block; margin-left: 4px; margin-right: 2px; height: 10px; width: 20px; background: #10CF50; border-radius: 10px;"></span>
+          <font size="2" color="#9F9F9F" face="sans-serif">
+            Positive
+          </font>
+
+          <span style="display: inline-block; margin-left: 4px; margin-right: 2px; height: 10px; width: 20px; background: #FF4F2F; border-radius: 10px;"></span>
+          <font size="2" color="#9F9F9F" face="sans-serif">
+            Negative
+          </font>
+
+          <span style="display: inline-block; margin-left: 4px; margin-right: 2px; height: 10px; width: 20px; background: #6B6969; border-radius: 10px;"></span>
+          <font size="2" color="#9F9F9F" face="sans-serif">
+            Neutral
+          </font>
+
+          <span style="display: inline-block; margin-left: 4px; margin-right: 2px; height: 10px; width: 20px; background: #00AFD4; border-radius: 10px;"></span>
+          <font size="2" color="#9F9F9F" face="sans-serif">
+            Unknown
+          </font>
+        </td>
+      </tr>
+
+      <tr bgcolor="yellow">
+        <td height="290" bgcolor="yellow" colspan="2">
+
         </td>
       </tr>
     </table>
