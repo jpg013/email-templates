@@ -16,9 +16,9 @@ const connect = container => {
     throw new Error('missing required dependency')
   }
 
-  const { templateEngine, d3Charts, svgToPng, fileConverter, cdn } = services
+  const { templateEngine, d3Charts, svgToPng, cdn } = services
 
-  if (!templateEngine || !d3Charts || !svgToPng || !fileConverter || !cdn) {
+  if (!templateEngine || !d3Charts || !svgToPng || !cdn) {
     throw new Error('missing required dependency')
   }
 
@@ -85,7 +85,7 @@ const connect = container => {
       const chartSvg = buildD3Chart(cur.attachmentName, cur.markup, templateData[cur.dataProp])
 
       await fileHelpers.writeFileStreamAsync(chartSvg, fileHelpers.makeTmpFilePath(svgFileId))
-      await convertSvgToPng(svgFileId, pngFileId, fileConverter, cur.opts)
+      await convertSvgToPng(svgFileId, pngFileId, cur.opts)
 
       const bitmap = await fileHelpers.readTmpFile(pngFileId)
 

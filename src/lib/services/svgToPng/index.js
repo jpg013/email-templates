@@ -2,6 +2,7 @@ const winston  = require('winston')
 const path     = require('path')
 const fs       = require('fs')
 const uuidV4   = require('uuid/v4')
+const phantom  = require('phantom')
 
 async function connect(container) {
   const { fileHelpers } = container
@@ -10,24 +11,19 @@ async function connect(container) {
     throw new Error('missing required dependency')
   }
 
-  async function convertSvgToPng(svgFileId, pngFileId, fileConverter, opts={}) {
+  async function convertSvgToPng(svgFileId, pngFileId, opts={}) {
     const destFile = fileHelpers.makeTmpFilePath(pngFileId)
     const sourceFile = fileHelpers.makeTmpFilePath(svgFileId)
-    let process
 
-    try {
-      process = await fileConverter.createProcess()
-      process = await fileConverter.startProcess(process, sourceFile, opts)
+    const instance = await phantom.create()
+    const page = await instance.createPage()
 
-      // Download on completion
-      await fileConverter.downloadFile(process, destFile)
-    } catch(e) {
-      winston.log('error', e)
-    } finally {
-      if (process) {
-        process.delete()
-      }
-    }
+    // await page.property('viewportSize', { width: 1233, height: 664 });
+
+    const status = await page.open(sourceFile);
+    await page.render(destFile)
+
+    await instance.exit()
   }
 
   return {

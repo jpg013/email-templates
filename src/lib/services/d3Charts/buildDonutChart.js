@@ -45,6 +45,8 @@ function donutChart(d3) {
             var svg = selection.append('svg')
                 .attr('width', width + margin.left + margin.right)
                 .attr('height', height + margin.top + margin.bottom)
+                .attr('version', '1.1')
+                .attr('xmlns', 'http://www.w3.org/2000/svg')
                 .style('-webkit-filter', 'drop-shadow( 0px 3px 3px rgba(0,0,0,.3) )')
                 .style('filter', 'drop-shadow( 0px 3px 3px rgba(0,0,0,.25) )')
               .append('g')

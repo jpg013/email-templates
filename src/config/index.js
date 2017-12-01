@@ -7,7 +7,6 @@ const {
 
 const di            = require('./di')
 const cdn           = require('./cdn')
-const fileConverter = require('./fileConverter')
 const models        = require('../lib/models')
 const fileHelpers   = require('../bin/fileHelpers')
 
@@ -15,8 +14,6 @@ const bindArgs = {
   serverSettings,
   pathSettings,
   fileHelpers,
-  cloudConvertSettings,
-  fileConverter,
   awsSettings,
   cdn,
   models

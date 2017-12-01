@@ -2,7 +2,6 @@ function initDI ({
   serverSettings,
   pathSettings,
   cloudConvertSettings,
-  fileConverter,
   fileHelpers,
   awsSettings,
   models,
@@ -15,7 +14,6 @@ function initDI ({
 
     container.serverSettings = Object.assign({}, serverSettings)
     container.pathSettings   = Object.assign({}, pathSettings)
-    container.fileConverter  = fileConverter.connect(cloudConvertSettings)
     container.models         = Object.assign({}, models)
     container.fileHelpers    = fileHelpers.connect(pathSettings)
     container.cdn            = cdn.connect(awsSettings)
